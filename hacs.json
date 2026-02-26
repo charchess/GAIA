@@ -1,0 +1,12 @@
+{
+    "name": "GAIA - Google Assistant Exposure Manager",
+    "render_readme": true,
+    "filename": "gaia.zip",
+    "zip_release": false,
+    "country": [
+        "FR",
+        "US"
+    ],
+    "homeassistant": "2024.1.0",
+    "iot_class": "Local Push"
+}
