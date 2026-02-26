@@ -1,9 +1,12 @@
 {
   "domain": "gaia",
-  "name": "GAIA - Google Assistant Exposure Manager",
+  "name": "GAIA - Google Assistant Integration Administrator",
   "version": "0.1.0",
   "documentation": "https://github.com/yourusername/gaia",
-  "dependencies": ["http", "google_assistant"],
+  "dependencies": [
+    "http",
+    "google_assistant"
+  ],
   "codeowners": [],
   "requirements": [],
   "iot_class": "local_push"

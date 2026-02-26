@@ -85,7 +85,7 @@ export default function App() {
             <aside className="sidebar">
                 <div className="sidebar-header">
                     <Mic size={28} />
-                    <h1 className="sidebar-title">GAIA Manager</h1>
+                    <h1 className="sidebar-title">GAIA - Google Assistant Integration Administrator</h1>
                 </div>
 
                 <nav className="sidebar-nav">

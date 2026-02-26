@@ -1,4 +1,4 @@
-"""The GAIA - Google Assistant Exposure Manager integration.
+"""The GAIA - Google Assistant Integration Administrator integration.
 
 This component provides an advanced dashboard to manage entity exposure to Google Assistant.
 """

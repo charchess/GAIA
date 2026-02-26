@@ -1,4 +1,4 @@
-# GAIA - Google Assistant Exposure Manager
+# GAIA - Google Assistant Integration Administrator
 
 GAIA is a modern, responsive, and easy-to-use custom panel for Home Assistant to manage which entities are exposed to Google Assistant.
 
