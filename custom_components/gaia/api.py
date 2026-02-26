@@ -303,23 +303,21 @@ def ws_get_entities(hass: HomeAssistant, connection: websocket_api.ActiveConnect
              # Typical HA behavior: if exposed_domains is empty but expose_by_default is true
              domain_exposed = True
              
-        # Check for explicit entity override
-        state = "default"
-        is_exposed = domain_exposed
+        yaml_has_override = False
+        override_value = None
         
         if entity_id in entity_configs:
              if 'expose' in entity_configs[entity_id]:
-                 override_exposed = entity_configs[entity_id].get('expose')
-                 is_exposed = override_exposed
-                 state = "exposed" if override_exposed else "hidden"
+                 override_value = entity_configs[entity_id].get('expose')
+                 yaml_has_override = True
 
         entities.append({
             "entity_id": entity_id,
             "domain": domain,
             "name": entry.name or entry.original_name or entity_id,
-            "exposed": is_exposed,
-            "state": state,  # "default", "exposed", "hidden"
             "domain_exposed": domain_exposed,
+            "yaml_has_override": yaml_has_override,
+            "override_value": override_value,
             "icon": entry.icon or entry.original_icon
         })
         

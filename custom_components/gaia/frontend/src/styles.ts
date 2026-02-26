@@ -166,6 +166,17 @@ export const styles = `
     color: var(--gaia-primary);
 }
 
+/* Epic 4: Domain Tab Alert Colors */
+.gaia-tab.tab-red { border-bottom: 2px solid #ef5350; color: #ef5350; }
+.gaia-tab.tab-orange { border-bottom: 2px solid #ff9800; color: #ff9800; }
+.gaia-tab.tab-lightgreen { border-bottom: 2px solid #81c784; color: #81c784; }
+.gaia-tab.tab-darkgreen { border-bottom: 2px solid #4CAF50; color: #4CAF50; }
+
+.gaia-tab.tab-red.active { background: rgba(239, 83, 80, 0.08); font-weight: 600; }
+.gaia-tab.tab-orange.active { background: rgba(255, 152, 0, 0.08); font-weight: 600; }
+.gaia-tab.tab-lightgreen.active { background: rgba(129, 199, 132, 0.08); font-weight: 600; }
+.gaia-tab.tab-darkgreen.active { background: rgba(76, 175, 80, 0.08); font-weight: 600; }
+
 .gaia-main-area {
     flex: 1;
     padding: 32px;

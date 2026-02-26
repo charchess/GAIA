@@ -13,9 +13,9 @@ interface GaiaEntity {
     id: string;
     name: string;
     domain: string;
-    exposed: boolean;
-    state: 'exposed' | 'hidden' | 'default';
-    domainExposed: boolean;
+    domain_exposed: boolean;
+    yaml_has_override: boolean;
+    override_value: boolean | null;
 }
 
 const DOMAIN_ICONS: Record<string, React.ReactNode> = {
@@ -36,21 +36,21 @@ const DOMAIN_ICONS: Record<string, React.ReactNode> = {
 
 const EntityRow = React.memo(({
     entity,
-    domainExposed,
     onToggle
 }: {
     entity: GaiaEntity,
-    domainExposed: boolean,
     onToggle: (id: string, state: 'exposed' | 'hidden' | 'default') => void
 }) => {
 
     // Determine the two possible states for this entity based on its parent's domain state
-    const isDomainExposed = domainExposed;
+    const isDomainExposed = entity.domain_exposed;
 
     // If domain is exposed: Default = Exposed, Override = Hidden
     // If domain is hidden: Default = Hidden, Override = Exposed
-    const isOverridden = entity.state !== 'default';
+    const isOverridden = entity.yaml_has_override;
     const isOverrideExposed = !isDomainExposed; // If domain is hidden, the override is to expose it
+
+    const isCurrentlyExposed = isOverridden ? entity.override_value : isDomainExposed;
 
     const handleToggle = () => {
         if (isOverridden) {
@@ -69,9 +69,9 @@ const EntityRow = React.memo(({
                 <div style={{ fontSize: '11px', color: 'var(--gaia-text-sec)', marginTop: '2px', fontFamily: 'monospace' }}>{entity.id}</div>
             </td>
             <td style={{ verticalAlign: 'middle' }}>
-                <span className={`gaia-status-badge ${entity.exposed ? 'gaia-status-exposed' : 'gaia-status-hidden'}`}>
-                    {entity.exposed ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                    {entity.exposed ? 'Exposed' : 'Hidden'}
+                <span className={`gaia-status-badge ${isCurrentlyExposed ? 'gaia-status-exposed' : 'gaia-status-hidden'}`}>
+                    {isCurrentlyExposed ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+                    {isCurrentlyExposed ? 'Exposed' : 'Hidden'}
                 </span>
             </td>
             <td style={{ textAlign: 'right', verticalAlign: 'middle' }}>
@@ -100,7 +100,7 @@ const EntityRow = React.memo(({
                             )}
                         </div>
                     </button>
-                    {entity.state !== 'default' && (
+                    {entity.yaml_has_override && (
                         <span style={{ fontSize: '10px', color: 'var(--gaia-primary)', marginLeft: '8px', fontWeight: 'bold' }}>OVERRIDE</span>
                     )}
                 </div>
@@ -127,9 +127,9 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                 id: e.entity_id,
                 name: e.name || e.entity_id,
                 domain: e.domain,
-                exposed: e.exposed || false,
-                state: e.state || 'default',
-                domainExposed: e.domain_exposed || false
+                domain_exposed: e.domain_exposed || false,
+                yaml_has_override: e.yaml_has_override || false,
+                override_value: e.override_value
             }));
             setEntities(formattedEntities);
 
@@ -156,34 +156,16 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
     const toggleExposure = async (id: string, targetState: 'exposed' | 'hidden' | 'default') => {
         if (!hass) return;
 
-        // Optimistic UI update
-        const previousEntities = [...entities];
-        setEntities(entities.map(e => {
-            if (e.id === id) {
-                // Try to guess visual "exposed" boolean status without API. 
-                // If default, we'd need to know if the domain is exposed. 
-                // It's safer to just set the state visual immediately, and let the API sync fix everything later, but let's do a best effort.
-                let isExposed = e.exposed;
-                if (targetState === 'exposed') isExposed = true;
-                if (targetState === 'hidden') isExposed = false;
-                // If default, we really don't know easily without calculating domain state here. 
-                // We will freeze the current visual exposed value until refresh.
-                return { ...e, state: targetState, exposed: targetState === 'default' ? e.exposed : isExposed };
-            }
-            return e;
-        }));
-
         try {
             await hass.connection.sendMessagePromise({
                 type: 'gaia/update_exposure',
                 entity_id: id,
                 state: targetState
             });
-            // We should really fetch fresh state from backend because 'default' can flip 'exposed' boolean depending on domain
+            // We fetch fresh state from backend because it is the source of truth
             fetchEntities();
         } catch (err) {
             console.error('Failed to update exposure:', err);
-            setEntities(previousEntities);
         }
     };
 
@@ -205,8 +187,8 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
 
     const stats = {
         total: entities.length,
-        exposed: entities.filter(e => e.exposed).length,
-        hidden: entities.filter(e => !e.exposed).length,
+        exposed: entities.filter(e => e.yaml_has_override ? e.override_value : e.domain_exposed).length,
+        hidden: entities.filter(e => e.yaml_has_override ? !e.override_value : !e.domain_exposed).length,
     };
 
     if (!hass) {
@@ -268,16 +250,30 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                 >
                     <LayoutDashboard size={16} /> All Entities ({stats.total})
                 </button>
-                {Object.entries(domainCounts).map(([domain, count]) => (
-                    <button
-                        key={domain}
-                        className={`gaia-tab ${activeTab === domain ? 'active' : ''}`}
-                        onClick={() => setActiveTab(domain)}
-                    >
-                        {DOMAIN_ICONS[domain] || DOMAIN_ICONS.default}
-                        <span style={{ textTransform: 'capitalize' }}>{domain.replace(/_/g, ' ')} ({count})</span>
-                    </button>
-                ))}
+                {Object.entries(domainCounts).map(([domain, count]) => {
+                    const domainEntities = entities.filter(e => e.domain === domain);
+                    const isDomainExposed = domainEntities.length > 0 ? domainEntities[0].domain_exposed : false;
+                    const hasExposedOverrides = domainEntities.some(e => e.yaml_has_override && e.override_value === true);
+                    const hasHiddenOverrides = domainEntities.some(e => e.yaml_has_override && e.override_value === false);
+
+                    let colorClass = "";
+                    if (!isDomainExposed) {
+                        colorClass = hasExposedOverrides ? "tab-orange" : "tab-red";
+                    } else {
+                        colorClass = hasHiddenOverrides ? "tab-lightgreen" : "tab-darkgreen";
+                    }
+
+                    return (
+                        <button
+                            key={domain}
+                            className={`gaia-tab ${activeTab === domain ? 'active' : ''} ${colorClass}`}
+                            onClick={() => setActiveTab(domain)}
+                        >
+                            {DOMAIN_ICONS[domain] || DOMAIN_ICONS.default}
+                            <span style={{ textTransform: 'capitalize' }}>{domain.replace(/_/g, ' ')} ({count})</span>
+                        </button>
+                    );
+                })}
             </div>
 
             {/* Main Content Area */}
@@ -338,7 +334,6 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                                         <EntityRow
                                             key={entity.id}
                                             entity={entity}
-                                            domainExposed={entity.domainExposed}
                                             onToggle={toggleExposure}
                                         />
                                     ))}
