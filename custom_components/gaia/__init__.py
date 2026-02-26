@@ -41,9 +41,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config={
             "_panel_custom": {
                 "name": PANEL_NAME,
-                "embed_iframe": True, # If using React build as static files, an iframe might be easiest, or a custom js script. Let's start with a custom module.
+                "embed_iframe": False,
                 "trust_external": False,
-                "js_url": "/gaia_frontend/index.js", # Assuming Vite build outputs to index.js
+                "module_url": "/gaia_frontend/index.js",
             }
         },
         require_admin=True,
