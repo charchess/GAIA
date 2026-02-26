@@ -422,3 +422,13 @@ input:checked+.slider:before {
     font-size: 0.875rem;
     margin: 0;
 }
+
+.spin-animation {
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}

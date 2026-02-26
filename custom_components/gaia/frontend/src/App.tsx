@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     LayoutDashboard,
     Lightbulb,
@@ -12,19 +12,16 @@ import {
     XCircle,
     Mic,
     Activity,
-    Check
+    Check,
+    RefreshCw
 } from 'lucide-react';
 
-// MOCK DATA for development layout
-const MOCK_ENTITIES = [
-    { id: 'light.living_room', name: 'Living Room Lights', domain: 'light', exposed: true },
-    { id: 'light.kitchen', name: 'Kitchen Lights', domain: 'light', exposed: false },
-    { id: 'light.bedroom', name: 'Bedroom Ceiling', domain: 'light', exposed: true },
-    { id: 'switch.coffee_maker', name: 'Coffee Maker', domain: 'switch', exposed: true },
-    { id: 'switch.tv_plug', name: 'TV Smart Plug', domain: 'switch', exposed: false },
-    { id: 'climate.home', name: 'Home Thermostat', domain: 'climate', exposed: true },
-    { id: 'alarm_control_panel.home', name: 'House Alarm', domain: 'alarm_control_panel', exposed: false },
-];
+interface GaiaEntity {
+    id: string;
+    name: string;
+    domain: string;
+    exposed: boolean;
+}
 
 const DOMAIN_ICONS: Record<string, React.ReactNode> = {
     light: <Lightbulb size={24} />,
@@ -34,13 +31,65 @@ const DOMAIN_ICONS: Record<string, React.ReactNode> = {
     default: <Smartphone size={24} />
 };
 
-export default function App() {
-    const [entities, setEntities] = useState(MOCK_ENTITIES);
+export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }) {
+    const [entities, setEntities] = useState<GaiaEntity[]>([]);
     const [activeTab, setActiveTab] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const toggleExposure = (id: string) => {
-        setEntities(entities.map(e => e.id === id ? { ...e, exposed: !e.exposed } : e));
+    // Fetch entities from the GAIA backend WS API
+    const fetchEntities = async () => {
+        if (!hass) return;
+
+        setIsLoading(true);
+        setError(null);
+        try {
+            // Call our custom python websocket command
+            const response = await hass.connection.sendMessagePromise({
+                type: 'gaia/get_entities'
+            });
+
+            const formattedEntities = response.map((e: any) => ({
+                id: e.entity_id,
+                name: e.name,
+                domain: e.domain,
+                exposed: e.exposed || false
+            }));
+
+            setEntities(formattedEntities);
+        } catch (err: any) {
+            console.error('Failed to fetch GAIA entities:', err);
+            setError('Could not connect to Home Assistant API.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Initial fetch when HA object becomes available
+    useEffect(() => {
+        if (hass && entities.length === 0) {
+            fetchEntities();
+        }
+    }, [hass]); // Intentionally omitting `entities.length` to not loop
+
+    const toggleExposure = async (id: string, currentStatus: boolean) => {
+        if (!hass) return;
+
+        // Optimistic UI update
+        setEntities(entities.map(e => e.id === id ? { ...e, exposed: !currentStatus } : e));
+
+        try {
+            await hass.connection.sendMessagePromise({
+                type: 'gaia/update_exposure',
+                entity_id: id,
+                expose: !currentStatus
+            });
+        } catch (err) {
+            console.error('Failed to update exposure:', err);
+            // Revert optimistic update on failure
+            setEntities(entities.map(e => e.id === id ? { ...e, exposed: currentStatus } : e));
+        }
     };
 
     const domainCounts = useMemo(() => {
@@ -48,7 +97,10 @@ export default function App() {
         entities.forEach(e => {
             counts[e.domain] = (counts[e.domain] || 0) + 1;
         });
-        return counts;
+        return Object.fromEntries(
+            // Sort domains alphabetically
+            Object.entries(counts).sort(([a], [b]) => a.localeCompare(b))
+        );
     }, [entities]);
 
     const filteredEntities = useMemo(() => {
@@ -60,12 +112,12 @@ export default function App() {
             const lowerQ = searchQuery.toLowerCase();
             filtered = filtered.filter(e => e.name.toLowerCase().includes(lowerQ) || e.id.toLowerCase().includes(lowerQ));
         }
-        return filtered;
+        return filtered.sort((a, b) => a.name.localeCompare(b.name));
     }, [entities, activeTab, searchQuery]);
 
     // Group entities by domain
     const groupedEntities = useMemo(() => {
-        const groups: Record<string, typeof entities> = {};
+        const groups: Record<string, GaiaEntity[]> = {};
         filteredEntities.forEach(e => {
             if (!groups[e.domain]) groups[e.domain] = [];
             groups[e.domain].push(e);
@@ -79,13 +131,22 @@ export default function App() {
         hidden: entities.filter(e => !e.exposed).length,
     };
 
+    if (!hass) {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--text-secondary)' }}>
+                <RefreshCw size={48} className="spin-animation" style={{ marginBottom: '16px', opacity: 0.5 }} />
+                <h2>Connecting to Home Assistant...</h2>
+            </div>
+        );
+    }
+
     return (
         <div className="app-container">
             {/* Sidebar */}
             <aside className="sidebar">
                 <div className="sidebar-header">
                     <Mic size={28} />
-                    <h1 className="sidebar-title">GAIA - Google Assistant Integration Administrator</h1>
+                    <h1 className="sidebar-title">GAIA Setup</h1>
                 </div>
 
                 <nav className="sidebar-nav">
@@ -120,15 +181,20 @@ export default function App() {
             <main className="main-content">
                 <header className="topbar">
                     <h2 className="topbar-title">Exposure Dashboard</h2>
-                    <div className="search-wrapper">
-                        <Search size={18} className="search-icon" />
-                        <input
-                            type="text"
-                            className="search-input"
-                            placeholder="Search entities by name or ID..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                        <button className="btn-secondary" onClick={fetchEntities} disabled={isLoading} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <RefreshCw size={16} /> Refresh
+                        </button>
+                        <div className="search-wrapper">
+                            <Search size={18} className="search-icon" />
+                            <input
+                                type="text"
+                                className="search-input"
+                                placeholder="Search entities by name or ID..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
                     </div>
                 </header>
 
@@ -157,24 +223,24 @@ export default function App() {
                         </div>
                     </div>
 
-                    {Object.entries(groupedEntities).map(([domain, domainEntities]) => (
+                    {error && (
+                        <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger-color)', padding: '16px', borderRadius: 'var(--radius-md)', marginBottom: '24px', border: '1px solid var(--danger-color)' }}>
+                            <strong>Error: </strong> {error}
+                        </div>
+                    )}
+
+                    {isLoading && entities.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '64px', color: 'var(--text-secondary)' }}>
+                            <RefreshCw size={48} className="spin-animation" style={{ opacity: 0.2, marginBottom: '16px' }} />
+                            <h3>Loading your Home Assistant environment...</h3>
+                        </div>
+                    ) : Object.entries(groupedEntities).map(([domain, domainEntities]) => (
                         <div key={domain} className="domain-card">
                             <div className="domain-header">
                                 <h3 className="domain-title">
                                     {DOMAIN_ICONS[domain] || DOMAIN_ICONS.default}
                                     {domain}
                                 </h3>
-                                <div className="domain-actions">
-                                    <button
-                                        className="btn-secondary"
-                                        onClick={() => {
-                                            const allExposed = domainEntities.every(e => e.exposed);
-                                            setEntities(entities.map(e => e.domain === domain ? { ...e, exposed: !allExposed } : e));
-                                        }}
-                                    >
-                                        Toggle All {domain}
-                                    </button>
-                                </div>
                             </div>
 
                             <table className="entity-table">
@@ -210,7 +276,7 @@ export default function App() {
                                                     <input
                                                         type="checkbox"
                                                         checked={entity.exposed}
-                                                        onChange={() => toggleExposure(entity.id)}
+                                                        onChange={() => toggleExposure(entity.id, entity.exposed)}
                                                     />
                                                     <span className="slider"></span>
                                                 </label>
@@ -222,11 +288,11 @@ export default function App() {
                         </div>
                     ))}
 
-                    {Object.keys(groupedEntities).length === 0 && (
+                    {!isLoading && Object.keys(groupedEntities).length === 0 && (
                         <div style={{ textAlign: 'center', padding: '64px', color: 'var(--text-secondary)' }}>
                             <Settings size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
                             <h3>No entities found</h3>
-                            <p>Try adjusting your search criteria.</p>
+                            <p>Try adjusting your search criteria or hit refresh.</p>
                         </div>
                     )}
                 </div>
