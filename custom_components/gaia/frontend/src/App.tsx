@@ -32,12 +32,7 @@ const DOMAIN_ICONS: Record<string, React.ReactNode> = {
     zone: <Map size={18} />, ai_task: <Activity size={18} />, default: <Smartphone size={18} />
 };
 
-const EntityRow = React.memo(({ entity, mode, onToggle }: { entity: GaiaEntity, mode: 'expose' | 'hide', onToggle: (id: string, exposed: boolean) => void }) => {
-    // Mode 'expose': Switch is labeled "Hidden". ON (red) means entity.exposed is false.
-    // Mode 'hide': Switch is labeled "Exposed". ON (green) means entity.exposed is true.
-    const isSwitchOn = mode === 'expose' ? !entity.exposed : entity.exposed;
-    const switchClass = mode === 'expose' ? 'gaia-switch-red' : 'gaia-switch-green';
-
+const EntityRow = React.memo(({ entity, onToggle }: { entity: GaiaEntity, onToggle: (id: string, exposed: boolean) => void }) => {
     return (
         <tr className="gaia-table-row">
             <td>
@@ -53,7 +48,7 @@ const EntityRow = React.memo(({ entity, mode, onToggle }: { entity: GaiaEntity, 
                 <div className="gaia-switch-wrapper">
                     <button
                         type="button"
-                        className={`gaia-switch ${switchClass} ${isSwitchOn ? 'checked' : ''}`}
+                        className={`gaia-switch ${entity.exposed ? 'checked' : ''}`}
                         onClick={() => onToggle(entity.id, entity.exposed)}
                     >
                         <span className="gaia-slider"></span>
@@ -217,18 +212,14 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                             <div className="gaia-card-header">
                                 <div className="gaia-global-switch">
                                     <span className="gaia-global-label">Global Default View:</span>
-                                    <div className="gaia-segment-control">
+                                    <div className="gaia-switch-wrapper">
                                         <button
-                                            className={`gaia-segment-btn ${currentMode === 'hide' ? 'active-hide' : ''}`}
-                                            onClick={() => setMode('hide')}
+                                            type="button"
+                                            className={`gaia-switch global ${currentMode === 'expose' ? 'checked' : ''}`}
+                                            onClick={() => setMode(currentMode === 'hide' ? 'expose' : 'hide')}
                                         >
-                                            Hide
-                                        </button>
-                                        <button
-                                            className={`gaia-segment-btn ${currentMode === 'expose' ? 'active-expose' : ''}`}
-                                            onClick={() => setMode('expose')}
-                                        >
-                                            Expose
+                                            <span className="gaia-slider"></span>
+                                            <span className="gaia-switch-text">{currentMode === 'expose' ? 'EXPOSE' : 'HIDE'}</span>
                                         </button>
                                     </div>
                                     <p className="gaia-global-desc">
@@ -254,7 +245,6 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                                         <EntityRow
                                             key={entity.id}
                                             entity={entity}
-                                            mode={activeTab === 'all' ? 'hide' : currentMode}
                                             onToggle={toggleExposure}
                                         />
                                     ))}

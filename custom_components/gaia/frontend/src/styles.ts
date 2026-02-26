@@ -118,23 +118,18 @@ export const styles = `
 /* Horizontal Tabs Menu */
 .gaia-tabs-container {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
-    padding: 0 32px;
+    padding: 16px 32px 0 32px;
     background-color: var(--gaia-card-bg);
     border-bottom: 1px solid var(--gaia-border);
-    overflow-x: auto;
-    scrollbar-width: none;
-}
-
-.gaia-tabs-container::-webkit-scrollbar {
-    display: none;
 }
 
 .gaia-tab {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 16px 4px;
+    padding: 8px 4px 16px 4px;
     margin-right: 24px;
     border: none;
     background: none;
@@ -354,12 +349,24 @@ export const styles = `
     color: white;
 }
 
-.gaia-switch.gaia-switch-red.checked {
-    background-color: var(--gaia-danger);
+.gaia-switch.checked {
+    background-color: var(--gaia-success);
 }
 
-.gaia-switch.gaia-switch-green.checked {
-    background-color: var(--gaia-success);
+.gaia-switch.global {
+    width: 106px;
+}
+
+.gaia-switch.global.checked {
+    background-color: var(--gaia-primary);
+}
+
+.gaia-switch.global .gaia-switch-text {
+    width: 70px;
+}
+
+.gaia-switch.global.checked .gaia-slider {
+    transform: translateX(70px);
 }
 
 .gaia-spin {
