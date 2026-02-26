@@ -1,41 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-    LayoutDashboard,
-    Lightbulb,
-    Power,
-    Thermometer,
-    Shield,
-    Smartphone,
-    Settings,
-    Search,
-    CheckCircle2,
-    XCircle,
-    Mic,
-    Activity,
-    Check,
-    RefreshCw,
-    Calendar,
-    Camera,
-    MessageSquare,
-    Blinds,
-    MapPin,
-    Zap,
-    Image as ImageIcon,
-    ToggleLeft,
-    Clock,
-    Hash,
-    List,
-    Key,
-    Music,
-    Users,
-    Gamepad2,
-    PlaySquare,
-    FileText,
-    MousePointer2,
-    Droplets,
-    Wind,
-    Cloud,
-    Map
+    LayoutDashboard, Lightbulb, Power, Thermometer, Shield, Smartphone,
+    Settings, Search, CheckCircle2, XCircle, Mic, Activity, Check,
+    RefreshCw, Calendar, Camera, MessageSquare, Blinds, MapPin, Zap,
+    Image as ImageIcon, ToggleLeft, Clock, Hash, List, Key, Music,
+    Users, Gamepad2, PlaySquare, FileText, MousePointer2, Droplets,
+    Wind, Cloud, Map
 } from 'lucide-react';
 
 interface GaiaEntity {
@@ -46,76 +16,51 @@ interface GaiaEntity {
 }
 
 const DOMAIN_ICONS: Record<string, React.ReactNode> = {
-    light: <Lightbulb size={24} />,
-    switch: <Power size={24} />,
-    climate: <Thermometer size={24} />,
-    alarm_control_panel: <Shield size={24} />,
-    binary_sensor: <ToggleLeft size={24} />,
-    button: <MousePointer2 size={24} />,
-    calendar: <Calendar size={24} />,
-    camera: <Camera size={24} />,
-    conversation: <MessageSquare size={24} />,
-    cover: <Blinds size={24} />,
-    device_tracker: <MapPin size={24} />,
-    event: <Zap size={24} />,
-    fan: <Wind size={24} />,
-    image: <ImageIcon size={24} />,
-    input_boolean: <ToggleLeft size={24} />,
-    input_datetime: <Clock size={24} />,
-    input_number: <Hash size={24} />,
-    input_select: <List size={24} />,
-    lock: <Key size={24} />,
-    media_player: <Music size={24} />,
-    number: <Hash size={24} />,
-    person: <Users size={24} />,
-    remote: <Gamepad2 size={24} />,
-    scene: <PlaySquare size={24} />,
-    script: <FileText size={24} />,
-    select: <List size={24} />,
-    sensor: <Activity size={24} />,
-    stt: <Mic size={24} />,
-    tts: <Mic size={24} />,
-    time: <Clock size={24} />,
-    todo: <Check size={24} />,
-    update: <RefreshCw size={24} />,
-    vacuum: <Settings size={24} />,
-    water_heater: <Droplets size={24} />,
-    weather: <Cloud size={24} />,
-    zone: <Map size={24} />,
-    ai_task: <Activity size={24} />,
-    default: <Smartphone size={24} />
+    light: <Lightbulb size={18} />, switch: <Power size={18} />, climate: <Thermometer size={18} />,
+    alarm_control_panel: <Shield size={18} />, binary_sensor: <ToggleLeft size={18} />,
+    button: <MousePointer2 size={18} />, calendar: <Calendar size={18} />, camera: <Camera size={18} />,
+    conversation: <MessageSquare size={18} />, cover: <Blinds size={18} />, device_tracker: <MapPin size={18} />,
+    event: <Zap size={18} />, fan: <Wind size={18} />, image: <ImageIcon size={18} />,
+    input_boolean: <ToggleLeft size={18} />, input_datetime: <Clock size={18} />,
+    input_number: <Hash size={18} />, input_select: <List size={18} />, lock: <Key size={18} />,
+    media_player: <Music size={18} />, number: <Hash size={18} />, person: <Users size={18} />,
+    remote: <Gamepad2 size={18} />, scene: <PlaySquare size={18} />, script: <FileText size={18} />,
+    select: <List size={18} />, sensor: <Activity size={18} />, stt: <Mic size={18} />, tts: <Mic size={18} />,
+    time: <Clock size={18} />, todo: <Check size={18} />, update: <RefreshCw size={18} />,
+    vacuum: <Settings size={18} />, water_heater: <Droplets size={18} />, weather: <Cloud size={18} />,
+    zone: <Map size={18} />, ai_task: <Activity size={18} />, default: <Smartphone size={18} />
 };
 
-// Memoized row component to handle large lists of entities efficiently
-const EntityRow = React.memo(({ entity, domain, onToggle }: { entity: GaiaEntity, domain: string, onToggle: (id: string, exposed: boolean) => void }) => {
+const EntityRow = React.memo(({ entity, mode, onToggle }: { entity: GaiaEntity, mode: 'expose' | 'hide', onToggle: (id: string, exposed: boolean) => void }) => {
+    // Mode 'expose': Switch is labeled "Hidden". ON (red) means entity.exposed is false.
+    // Mode 'hide': Switch is labeled "Exposed". ON (green) means entity.exposed is true.
+    const isSwitchOn = mode === 'expose' ? !entity.exposed : entity.exposed;
+    const switchClass = mode === 'expose' ? 'gaia-switch-red' : 'gaia-switch-green';
+    const actionLabel = mode === 'expose' ? 'Hidden' : 'Exposed';
+
     return (
-        <tr>
+        <tr className="gaia-table-row">
             <td>
-                <div className="entity-name-col">
-                    <div className="entity-icon">
-                        {DOMAIN_ICONS[domain] || DOMAIN_ICONS.default}
-                    </div>
-                    <div>
-                        <div className="entity-name">{entity.name}</div>
-                        <div className="entity-id">{entity.id}</div>
-                    </div>
-                </div>
+                <div className="gaia-entity-name">{entity.name}</div>
             </td>
             <td>
-                <span className={`status-badge ${entity.exposed ? 'status-exposed' : 'status-hidden'}`}>
+                <span className={`gaia-status-badge ${entity.exposed ? 'gaia-status-exposed' : 'gaia-status-hidden'}`}>
                     {entity.exposed ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
                     {entity.exposed ? 'Exposed' : 'Hidden'}
                 </span>
             </td>
             <td style={{ textAlign: 'right' }}>
-                <label className="toggle-switch">
-                    <input
-                        type="checkbox"
-                        checked={entity.exposed}
-                        onChange={() => onToggle(entity.id, entity.exposed)}
-                    />
-                    <span className="slider"></span>
-                </label>
+                <div className="gaia-switch-wrapper">
+                    <span className="gaia-switch-label">{actionLabel}</span>
+                    <label className={`gaia-switch ${switchClass}`}>
+                        <input
+                            type="checkbox"
+                            checked={isSwitchOn}
+                            onChange={() => onToggle(entity.id, entity.exposed)}
+                        />
+                        <span className="gaia-slider"></span>
+                    </label>
+                </div>
             </td>
         </tr>
     );
@@ -127,48 +72,36 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
     const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [domainModes, setDomainModes] = useState<Record<string, 'expose' | 'hide'>>({});
 
-    // Fetch entities from the GAIA backend WS API
     const fetchEntities = async () => {
         if (!hass) return;
-
         setIsLoading(true);
         setError(null);
         try {
-            // Call our custom python websocket command
-            const response = await hass.connection.sendMessagePromise({
-                type: 'gaia/get_entities'
-            });
-
+            const response = await hass.connection.sendMessagePromise({ type: 'gaia/get_entities' });
             const formattedEntities = response.map((e: any) => ({
                 id: e.entity_id,
-                name: e.name,
+                name: e.name || e.entity_id,
                 domain: e.domain,
                 exposed: e.exposed || false
             }));
-
             setEntities(formattedEntities);
         } catch (err: any) {
             console.error('Failed to fetch GAIA entities:', err);
-            setError('Could not connect to Home Assistant API.');
+            setError('Could not connect to Home Assistant API. Ensure GAIA is running.');
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Initial fetch when HA object becomes available
     useEffect(() => {
-        if (hass && entities.length === 0) {
-            fetchEntities();
-        }
-    }, [hass]); // Intentionally omitting `entities.length` to not loop
+        if (hass && entities.length === 0) fetchEntities();
+    }, [hass]);
 
     const toggleExposure = async (id: string, currentStatus: boolean) => {
         if (!hass) return;
-
-        // Optimistic UI update
         setEntities(entities.map(e => e.id === id ? { ...e, exposed: !currentStatus } : e));
-
         try {
             await hass.connection.sendMessagePromise({
                 type: 'gaia/update_exposure',
@@ -177,43 +110,25 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
             });
         } catch (err) {
             console.error('Failed to update exposure:', err);
-            // Revert optimistic update on failure
             setEntities(entities.map(e => e.id === id ? { ...e, exposed: currentStatus } : e));
         }
     };
 
     const domainCounts = useMemo(() => {
         const counts: Record<string, number> = {};
-        entities.forEach(e => {
-            counts[e.domain] = (counts[e.domain] || 0) + 1;
-        });
-        return Object.fromEntries(
-            // Sort domains alphabetically
-            Object.entries(counts).sort(([a], [b]) => a.localeCompare(b))
-        );
+        entities.forEach(e => counts[e.domain] = (counts[e.domain] || 0) + 1);
+        return Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)));
     }, [entities]);
 
     const filteredEntities = useMemo(() => {
         let filtered = entities;
-        if (activeTab !== 'all') {
-            filtered = filtered.filter(e => e.domain === activeTab);
-        }
+        if (activeTab !== 'all') filtered = filtered.filter(e => e.domain === activeTab);
         if (searchQuery) {
             const lowerQ = searchQuery.toLowerCase();
-            filtered = filtered.filter(e => e.name.toLowerCase().includes(lowerQ) || e.id.toLowerCase().includes(lowerQ));
+            filtered = filtered.filter(e => e.name.toLowerCase().includes(lowerQ));
         }
         return filtered.sort((a, b) => a.name.localeCompare(b.name));
     }, [entities, activeTab, searchQuery]);
-
-    // Group entities by domain
-    const groupedEntities = useMemo(() => {
-        const groups: Record<string, GaiaEntity[]> = {};
-        filteredEntities.forEach(e => {
-            if (!groups[e.domain]) groups[e.domain] = [];
-            groups[e.domain].push(e);
-        });
-        return groups;
-    }, [filteredEntities]);
 
     const stats = {
         total: entities.length,
@@ -223,146 +138,132 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
 
     if (!hass) {
         return (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--text-secondary)' }}>
-                <RefreshCw size={48} className="spin-animation" style={{ marginBottom: '16px', opacity: 0.5 }} />
-                <h2>Connecting to Home Assistant...</h2>
+            <div className="gaia-loading-screen">
+                <RefreshCw size={48} className="gaia-spin" style={{ marginBottom: '16px', opacity: 0.5 }} />
+                <h2>Connecting to Home Assistant API...</h2>
             </div>
         );
     }
 
+    const currentMode = domainModes[activeTab] || 'hide'; // Default to hide
+    const setMode = (mode: 'expose' | 'hide') => setDomainModes(prev => ({ ...prev, [activeTab]: mode }));
+
     return (
-        <div className="app-container">
-            {/* Sidebar */}
-            <aside className="sidebar">
-                <div className="sidebar-header">
-                    <Mic size={28} />
-                    <h1 className="sidebar-title">GAIA Setup</h1>
+        <div className="gaia-app gaia-fade-in">
+            {/* Header */}
+            <header className="gaia-header">
+                <div className="gaia-header-title">
+                    <Mic size={28} style={{ color: 'var(--gaia-primary)' }} />
+                    <h1>GAIA Exposure Manager</h1>
                 </div>
-
-                <nav className="sidebar-nav">
-                    <button
-                        className={`nav-item ${activeTab === 'all' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('all')}
-                    >
-                        <LayoutDashboard size={20} />
-                        <span>All Entities</span>
-                        <span className="nav-badge">{stats.total}</span>
+                <div className="gaia-header-actions">
+                    <div className="gaia-search">
+                        <Search size={18} className="gaia-search-icon" />
+                        <input
+                            type="text"
+                            placeholder="Search entities by name..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <button className="gaia-btn" onClick={fetchEntities} disabled={isLoading}>
+                        <RefreshCw size={16} className={isLoading ? "gaia-spin" : ""} /> Refresh
                     </button>
+                </div>
+            </header>
 
-                    <div style={{ margin: '24px 0 8px 16px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        Domains
+            {/* Horizontal Tabs */}
+            <div className="gaia-tabs-container">
+                <button
+                    className={`gaia-tab ${activeTab === 'all' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('all')}
+                >
+                    <LayoutDashboard size={16} /> All Entities <span className="gaia-tab-badge">{stats.total}</span>
+                </button>
+                {Object.entries(domainCounts).map(([domain, count]) => (
+                    <button
+                        key={domain}
+                        className={`gaia-tab ${activeTab === domain ? 'active' : ''}`}
+                        onClick={() => setActiveTab(domain)}
+                    >
+                        {DOMAIN_ICONS[domain] || DOMAIN_ICONS.default}
+                        <span style={{ textTransform: 'capitalize' }}>{domain.replace(/_/g, ' ')}</span>
+                        <span className="gaia-tab-badge">{count}</span>
+                    </button>
+                ))}
+            </div>
+
+            {/* Main Content Area */}
+            <main className="gaia-main-area">
+                {error && (
+                    <div className="gaia-error-banner">
+                        <strong>Error: </strong> {error}
                     </div>
+                )}
 
-                    {Object.entries(domainCounts).map(([domain, count]) => (
-                        <button
-                            key={domain}
-                            className={`nav-item ${activeTab === domain ? 'active' : ''}`}
-                            onClick={() => setActiveTab(domain)}
-                        >
-                            {DOMAIN_ICONS[domain] || DOMAIN_ICONS.default}
-                            <span style={{ textTransform: 'capitalize' }}>{domain}</span>
-                            <span className="nav-badge">{count}</span>
-                        </button>
-                    ))}
-                </nav>
-            </aside>
-
-            {/* Main Content */}
-            <main className="main-content">
-                <header className="topbar">
-                    <h2 className="topbar-title">Exposure Dashboard</h2>
-                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                        <button className="btn-secondary" onClick={fetchEntities} disabled={isLoading} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <RefreshCw size={16} /> Refresh
-                        </button>
-                        <div className="search-wrapper">
-                            <Search size={18} className="search-icon" />
-                            <input
-                                type="text"
-                                className="search-input"
-                                placeholder="Search entities by name or ID..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
+                {isLoading && entities.length === 0 ? (
+                    <div className="gaia-empty-state">
+                        <RefreshCw size={48} className="gaia-spin" style={{ opacity: 0.3, marginBottom: '24px' }} />
+                        <h3>Loading your Home Assistant environment...</h3>
                     </div>
-                </header>
-
-                <div className="content-area">
-                    <div className="stats-grid">
-                        <div className="stat-card">
-                            <div className="stat-icon stat-blue"><Activity size={28} /></div>
-                            <div>
-                                <p className="stat-value">{stats.total}</p>
-                                <p className="stat-label">Total Entities Found</p>
-                            </div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-icon stat-green"><Check size={28} /></div>
-                            <div>
-                                <p className="stat-value">{stats.exposed}</p>
-                                <p className="stat-label">Exposed to Google</p>
-                            </div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-icon stat-gray"><Settings size={28} /></div>
-                            <div>
-                                <p className="stat-value">{stats.hidden}</p>
-                                <p className="stat-label">Excluded Entities</p>
-                            </div>
-                        </div>
+                ) : filteredEntities.length === 0 ? (
+                    <div className="gaia-empty-state">
+                        <Settings size={48} style={{ opacity: 0.2, marginBottom: '24px' }} />
+                        <h3>No entities found</h3>
+                        <p>Try adjusting your search criteria or select another tab.</p>
                     </div>
-
-                    {error && (
-                        <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger-color)', padding: '16px', borderRadius: 'var(--radius-md)', marginBottom: '24px', border: '1px solid var(--danger-color)' }}>
-                            <strong>Error: </strong> {error}
-                        </div>
-                    )}
-
-                    {isLoading && entities.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '64px', color: 'var(--text-secondary)' }}>
-                            <RefreshCw size={48} className="spin-animation" style={{ opacity: 0.2, marginBottom: '16px' }} />
-                            <h3>Loading your Home Assistant environment...</h3>
-                        </div>
-                    ) : Object.entries(groupedEntities).map(([domain, domainEntities]) => (
-                        <div key={domain} className="domain-card">
-                            <div className="domain-header">
-                                <h3 className="domain-title">
-                                    {DOMAIN_ICONS[domain] || DOMAIN_ICONS.default}
-                                    {domain}
-                                </h3>
+                ) : (
+                    <div className="gaia-card">
+                        {activeTab !== 'all' && (
+                            <div className="gaia-card-header">
+                                <div className="gaia-global-switch">
+                                    <span className="gaia-global-label">Global Default View:</span>
+                                    <div className="gaia-segment-control">
+                                        <button
+                                            className={`gaia-segment-btn ${currentMode === 'hide' ? 'active-hide' : ''}`}
+                                            onClick={() => setMode('hide')}
+                                        >
+                                            Hide
+                                        </button>
+                                        <button
+                                            className={`gaia-segment-btn ${currentMode === 'expose' ? 'active-expose' : ''}`}
+                                            onClick={() => setMode('expose')}
+                                        >
+                                            Expose
+                                        </button>
+                                    </div>
+                                    <p className="gaia-global-desc">
+                                        {currentMode === 'hide'
+                                            ? "Entities are Hidden by default. Use switches to Expose them (Green)."
+                                            : "Entities are Exposed by default. Use switches to explicitly Hide them (Red)."}
+                                    </p>
+                                </div>
                             </div>
+                        )}
 
-                            <table className="entity-table">
+                        <div className="gaia-table-container">
+                            <table className="gaia-table">
                                 <thead>
                                     <tr>
-                                        <th>Entity</th>
-                                        <th>Status</th>
-                                        <th style={{ textAlign: 'right' }}>Expose to Google</th>
+                                        <th>Entity Name</th>
+                                        <th>Current Status</th>
+                                        <th style={{ textAlign: 'right' }}>Toggle Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {domainEntities.map(entity => (
+                                    {filteredEntities.map(entity => (
                                         <EntityRow
                                             key={entity.id}
                                             entity={entity}
-                                            domain={domain}
+                                            mode={activeTab === 'all' ? 'hide' : currentMode}
                                             onToggle={toggleExposure}
                                         />
                                     ))}
                                 </tbody>
                             </table>
                         </div>
-                    ))}
-
-                    {!isLoading && Object.keys(groupedEntities).length === 0 && (
-                        <div style={{ textAlign: 'center', padding: '64px', color: 'var(--text-secondary)' }}>
-                            <Settings size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
-                            <h3>No entities found</h3>
-                            <p>Try adjusting your search criteria or hit refresh.</p>
-                        </div>
-                    )}
-                </div>
+                    </div>
+                )}
             </main>
         </div>
     );
