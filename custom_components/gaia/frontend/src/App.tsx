@@ -13,7 +13,29 @@ import {
     Mic,
     Activity,
     Check,
-    RefreshCw
+    RefreshCw,
+    Calendar,
+    Camera,
+    MessageSquare,
+    Blinds,
+    MapPin,
+    Zap,
+    Image as ImageIcon,
+    ToggleLeft,
+    Clock,
+    Hash,
+    List,
+    Key,
+    Music,
+    Users,
+    Gamepad2,
+    PlaySquare,
+    FileText,
+    MousePointer2,
+    Droplets,
+    Wind,
+    Cloud,
+    Map
 } from 'lucide-react';
 
 interface GaiaEntity {
@@ -28,8 +50,76 @@ const DOMAIN_ICONS: Record<string, React.ReactNode> = {
     switch: <Power size={24} />,
     climate: <Thermometer size={24} />,
     alarm_control_panel: <Shield size={24} />,
+    binary_sensor: <ToggleLeft size={24} />,
+    button: <MousePointer2 size={24} />,
+    calendar: <Calendar size={24} />,
+    camera: <Camera size={24} />,
+    conversation: <MessageSquare size={24} />,
+    cover: <Blinds size={24} />,
+    device_tracker: <MapPin size={24} />,
+    event: <Zap size={24} />,
+    fan: <Wind size={24} />,
+    image: <ImageIcon size={24} />,
+    input_boolean: <ToggleLeft size={24} />,
+    input_datetime: <Clock size={24} />,
+    input_number: <Hash size={24} />,
+    input_select: <List size={24} />,
+    lock: <Key size={24} />,
+    media_player: <Music size={24} />,
+    number: <Hash size={24} />,
+    person: <Users size={24} />,
+    remote: <Gamepad2 size={24} />,
+    scene: <PlaySquare size={24} />,
+    script: <FileText size={24} />,
+    select: <List size={24} />,
+    sensor: <Activity size={24} />,
+    stt: <Mic size={24} />,
+    tts: <Mic size={24} />,
+    time: <Clock size={24} />,
+    todo: <Check size={24} />,
+    update: <RefreshCw size={24} />,
+    vacuum: <Settings size={24} />,
+    water_heater: <Droplets size={24} />,
+    weather: <Cloud size={24} />,
+    zone: <Map size={24} />,
+    ai_task: <Activity size={24} />,
     default: <Smartphone size={24} />
 };
+
+// Memoized row component to handle large lists of entities efficiently
+const EntityRow = React.memo(({ entity, domain, onToggle }: { entity: GaiaEntity, domain: string, onToggle: (id: string, exposed: boolean) => void }) => {
+    return (
+        <tr>
+            <td>
+                <div className="entity-name-col">
+                    <div className="entity-icon">
+                        {DOMAIN_ICONS[domain] || DOMAIN_ICONS.default}
+                    </div>
+                    <div>
+                        <div className="entity-name">{entity.name}</div>
+                        <div className="entity-id">{entity.id}</div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <span className={`status-badge ${entity.exposed ? 'status-exposed' : 'status-hidden'}`}>
+                    {entity.exposed ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+                    {entity.exposed ? 'Exposed' : 'Hidden'}
+                </span>
+            </td>
+            <td style={{ textAlign: 'right' }}>
+                <label className="toggle-switch">
+                    <input
+                        type="checkbox"
+                        checked={entity.exposed}
+                        onChange={() => onToggle(entity.id, entity.exposed)}
+                    />
+                    <span className="slider"></span>
+                </label>
+            </td>
+        </tr>
+    );
+});
 
 export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }) {
     const [entities, setEntities] = useState<GaiaEntity[]>([]);
@@ -253,35 +343,12 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                                 </thead>
                                 <tbody>
                                     {domainEntities.map(entity => (
-                                        <tr key={entity.id}>
-                                            <td>
-                                                <div className="entity-name-col">
-                                                    <div className="entity-icon">
-                                                        {DOMAIN_ICONS[domain] || DOMAIN_ICONS.default}
-                                                    </div>
-                                                    <div>
-                                                        <div className="entity-name">{entity.name}</div>
-                                                        <div className="entity-id">{entity.id}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span className={`status-badge ${entity.exposed ? 'status-exposed' : 'status-hidden'}`}>
-                                                    {entity.exposed ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                                                    {entity.exposed ? 'Exposed' : 'Hidden'}
-                                                </span>
-                                            </td>
-                                            <td style={{ textAlign: 'right' }}>
-                                                <label className="toggle-switch">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={entity.exposed}
-                                                        onChange={() => toggleExposure(entity.id, entity.exposed)}
-                                                    />
-                                                    <span className="slider"></span>
-                                                </label>
-                                            </td>
-                                        </tr>
+                                        <EntityRow
+                                            key={entity.id}
+                                            entity={entity}
+                                            domain={domain}
+                                            onToggle={toggleExposure}
+                                        />
                                     ))}
                                 </tbody>
                             </table>

@@ -222,6 +222,12 @@ body {
     background-color: rgba(3, 169, 244, 0.02);
 }
 
+/* Optimizations for 2000+ entities */
+.domain-card {
+    content-visibility: auto;
+    contain-intrinsic-size: 100px;
+}
+
 .entity-name-col {
     display: flex;
     align-items: center;
