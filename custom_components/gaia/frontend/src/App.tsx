@@ -36,17 +36,17 @@ const DOMAIN_ICONS: Record<string, React.ReactNode> = {
 const EntityRow = React.memo(({ entity, onToggle }: { entity: GaiaEntity, onToggle: (id: string, state: 'exposed' | 'hidden' | 'default') => void }) => {
     return (
         <tr className="gaia-table-row">
-            <td>
+            <td style={{ verticalAlign: 'middle' }}>
                 <div className="gaia-entity-name">{entity.name}</div>
-                <div style={{ fontSize: '11px', color: 'var(--gaia-text-secondary)', marginTop: '2px', fontFamily: 'monospace' }}>{entity.id}</div>
+                <div style={{ fontSize: '11px', color: 'var(--gaia-text-sec)', marginTop: '2px', fontFamily: 'monospace' }}>{entity.id}</div>
             </td>
-            <td>
+            <td style={{ verticalAlign: 'middle' }}>
                 <span className={`gaia-status-badge ${entity.exposed ? 'gaia-status-exposed' : 'gaia-status-hidden'}`}>
                     {entity.exposed ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
                     {entity.exposed ? 'Exposed' : 'Hidden'}
                 </span>
             </td>
-            <td style={{ textAlign: 'right' }}>
+            <td style={{ textAlign: 'right', verticalAlign: 'middle' }}>
                 <div className="gaia-three-state-toggle">
                     <button
                         className={`state-btn exposed ${entity.state === 'exposed' ? 'active' : ''}`}

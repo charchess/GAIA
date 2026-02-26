@@ -60,3 +60,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.components.frontend.async_remove_panel(PANEL_URL_PATH)
     return True
 
+
