@@ -1,7 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
-import { styles } from './styles';
 
 class GaiaDashboard extends HTMLElement {
     private _hass: any;
@@ -19,13 +18,6 @@ class GaiaDashboard extends HTMLElement {
     }
 
     connectedCallback() {
-        if (!this.querySelector('#gaia-dashboard-inline-style')) {
-            const styleTemplate = document.createElement('style');
-            styleTemplate.id = 'gaia-dashboard-inline-style';
-            styleTemplate.textContent = styles;
-            this.appendChild(styleTemplate);
-        }
-
         if (!this.root) {
             this.root = ReactDOM.createRoot(this);
         }

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { styles } from './styles';
 import {
     LayoutDashboard, Lightbulb, Power, Thermometer, Shield, Smartphone,
     Settings, Search, CheckCircle2, XCircle, Mic, Activity, Check,
@@ -148,6 +149,7 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
 
     return (
         <div className="gaia-app gaia-fade-in">
+            <style>{styles}</style>
             {/* Header */}
             <header className="gaia-header">
                 <div className="gaia-header-title">
