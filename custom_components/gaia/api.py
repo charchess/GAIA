@@ -319,6 +319,7 @@ def ws_get_entities(hass: HomeAssistant, connection: websocket_api.ActiveConnect
             "name": entry.name or entry.original_name or entity_id,
             "exposed": is_exposed,
             "state": state,  # "default", "exposed", "hidden"
+            "domain_exposed": domain_exposed,
             "icon": entry.icon or entry.original_icon
         })
         

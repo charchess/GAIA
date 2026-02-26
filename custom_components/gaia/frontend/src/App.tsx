@@ -15,6 +15,7 @@ interface GaiaEntity {
     domain: string;
     exposed: boolean;
     state: 'exposed' | 'hidden' | 'default';
+    domainExposed: boolean;
 }
 
 const DOMAIN_ICONS: Record<string, React.ReactNode> = {
@@ -127,9 +128,19 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                 name: e.name || e.entity_id,
                 domain: e.domain,
                 exposed: e.exposed || false,
-                state: e.state || 'default'
+                state: e.state || 'default',
+                domainExposed: e.domain_exposed || false
             }));
             setEntities(formattedEntities);
+
+            // Also update the global toggle switches to reflect actual backend state
+            const newDomainModes: Record<string, 'expose' | 'hide'> = {};
+            response.forEach((e: any) => {
+                if (e.domain_exposed !== undefined) {
+                    newDomainModes[e.domain] = e.domain_exposed ? 'expose' : 'hide';
+                }
+            });
+            setDomainModes(prev => ({ ...prev, ...newDomainModes }));
         } catch (err: any) {
             console.error('Failed to fetch GAIA entities:', err);
             setError('Could not connect to Home Assistant API. Ensure GAIA is running.');
@@ -323,24 +334,14 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredEntities.map(entity => {
-                                        // A domain is exposed if its currentMode is 'expose'
-                                        const dMode = domainModes[entity.domain];
-                                        // In absence of real server domain state fed to the frontend initially, 
-                                        // let's approximate it. GA requests `domainModes` when clicked.
-                                        // We should really get domain status from API. But for right now, the user uses the global switch to set it.
-                                        // If it's exposed globally, activeTab currentMode will be expose.
-                                        const isDomainExposed = dMode === 'expose';
-
-                                        return (
-                                            <EntityRow
-                                                key={entity.id}
-                                                entity={entity}
-                                                domainExposed={isDomainExposed}
-                                                onToggle={toggleExposure}
-                                            />
-                                        );
-                                    })}
+                                    {filteredEntities.map(entity => (
+                                        <EntityRow
+                                            key={entity.id}
+                                            entity={entity}
+                                            domainExposed={entity.domainExposed}
+                                            onToggle={toggleExposure}
+                                        />
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
