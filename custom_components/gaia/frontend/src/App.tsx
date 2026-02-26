@@ -140,7 +140,21 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
     }
 
     const currentMode = domainModes[activeTab] || 'hide'; // Default to hide
-    const setMode = (mode: 'expose' | 'hide') => setDomainModes(prev => ({ ...prev, [activeTab]: mode }));
+    const setMode = async (mode: 'expose' | 'hide') => {
+        const previousMode = currentMode;
+        setDomainModes(prev => ({ ...prev, [activeTab]: mode }));
+        if (!hass) return;
+        try {
+            await hass.connection.sendMessagePromise({
+                type: 'gaia/update_domain_exposure',
+                domain: activeTab,
+                expose: mode === 'expose'
+            });
+        } catch (err) {
+            console.error('Failed to update domain exposure:', err);
+            setDomainModes(prev => ({ ...prev, [activeTab]: previousMode }));
+        }
+    };
 
     return (
         <div className="gaia-app gaia-fade-in">

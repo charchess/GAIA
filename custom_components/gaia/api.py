@@ -21,25 +21,22 @@ def async_register_websockets(hass: HomeAssistant):
 )
 @callback
 def ws_get_entities(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict):
-    """Handle get entities request.
-    
-    This command will fetch all entities and cross-reference them with Google Assistant configuration.
-    """
+    """Handle get entities request."""
     entity_reg = er.async_get(hass)
     entities = []
 
-    # TODO: Fetch google_assistant specific entity configs to see what is exposed
-    # For now, we just list entities from the registry
+    # TODO: Fetch true google_assistant specific entity configs
     for entity_id, entry in entity_reg.entities.items():
         if entry.disabled_by or entry.hidden_by:
             continue
             
-        # Simplified example structure
+        # Simplified example structure - random exposure for dev testing
+        # We store domain exposure defaults in hass.data in a real impl
         entities.append({
             "entity_id": entity_id,
             "domain": entry.domain,
             "name": entry.name or entry.original_name or entity_id,
-            "exposed": False, # TODO: determine real exposure status
+            "exposed": False, # Real exposure status goes here
             "icon": entry.icon or entry.original_icon
         })
         
@@ -54,15 +51,25 @@ def ws_get_entities(hass: HomeAssistant, connection: websocket_api.ActiveConnect
 )
 @callback
 def ws_update_exposure(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict):
-    """Handle update exposure request.
-    
-    This command will update the entity's exposure settings for Google Assistant.
-    """
+    """Handle update exposure request."""
     entity_id = msg["entity_id"]
     expose = msg["expose"]
-    
     _LOGGER.info(f"Requested to {'expose' if expose else 'hide'} {entity_id} to Google Assistant")
-    
-    # TODO: Actually mutate the Google Assistant config entry / YAML state
-    
+    # TODO: Mutate the Google Assistant config entry
     connection.send_result(msg["id"], {"success": True, "entity_id": entity_id, "exposed": expose})
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "gaia/update_domain_exposure",
+        vol.Required("domain"): str,
+        vol.Required("expose"): bool,
+    }
+)
+@callback
+def ws_update_domain_exposure(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict):
+    """Handle domain-wide default exposure request."""
+    domain = msg["domain"]
+    expose = msg["expose"]
+    _LOGGER.info(f"Requested to set {domain} domain default to {'expose' if expose else 'hide'}")
+    # TODO: Mutate the Google Assistant global domain config
+    connection.send_result(msg["id"], {"success": True, "domain": domain, "exposed": expose})

@@ -27,6 +27,9 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up GAIA from a config entry."""
+    # Register websocket API commands
+    async_register_websockets(hass)
+
     # Register the frontend panel
     await hass.http.async_register_static_paths([
         StaticPathConfig("/gaia_frontend", hass.config.path("custom_components/gaia/frontend/dist"), False)
