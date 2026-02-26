@@ -23,39 +23,169 @@ def get_google_assistant_yaml_path(hass: HomeAssistant) -> str | None:
         
     return None
 
-def read_exposure_from_yaml(filepath: str) -> dict:
-    """Read existing entity configurations from the YAML file."""
+import logging
+import os
+import re
+import yaml
+import voluptuous as vol
+
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.components import websocket_api
+from homeassistant.helpers import entity_registry as er
+
+_LOGGER = logging.getLogger(__name__)
+
+def get_google_assistant_yaml_path(hass: HomeAssistant) -> str | None:
+    """Find the path to the google_assistant configuration file."""
+    ga_path = hass.config.path("google_assistant.yaml")
+    if os.path.exists(ga_path):
+        return ga_path
+        
+    config_path = hass.config.path("configuration.yaml")
+    if os.path.exists(config_path):
+        return config_path
+        
+    return None
+
+def read_config_from_yaml(filepath: str) -> tuple[dict, list, bool]:
+    """Read entity configs, exposed domains, and default exposure from YAML."""
     if not filepath or not os.path.exists(filepath):
-        return {}
+        return {}, [], False
         
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
-            # Safe yaml load is necessary to avoid running malicious code
-            # Note: PyYAML safe_load doesn't preserve comments, but we strictly read here
+            lines = f.readlines()
+            
+        # We manually parse exposed_domains to accurately capture commented fields
+        # yaml.safe_load drops comments so we wouldn't see "# - light"
+        exposed_domains = []
+        in_exposed_domains = False
+        
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith('exposed_domains:'):
+                in_exposed_domains = True
+                continue
+            if in_exposed_domains:
+                if stripped and not stripped.startswith('-') and not stripped.startswith('#') and not stripped.startswith('exposed_domains:'):
+                    if not line.lstrip().startswith('-') and not line.lstrip().startswith('#'):
+                         # We've left the list
+                         in_exposed_domains = False
+                         
+                # Check for active domain "- light"
+                match = re.match(r'^\s*-\s*\"?([a-zA-Z0-9_]+)\"?\s*$', line)
+                if match and in_exposed_domains:
+                    exposed_domains.append(match.group(1))
+                    
+        # Now use safe_load for the rest
+        with open(filepath, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f) or {}
             
-            # If the user included it directly, the root IS the google_assistant config
             ga_config = config.get('google_assistant', config) if isinstance(config, dict) else config
             
             if isinstance(ga_config, dict):
-                 return ga_config.get('entity_config', {})
+                 entity_config = ga_config.get('entity_config', {})
+                 expose_by_default = ga_config.get('expose_by_default', False)
+                 return entity_config, exposed_domains, expose_by_default
+                 
     except Exception as e:
         _LOGGER.error(f"Error reading YAML for GAIA: {e}")
         
-    return {}
+    return {}, [], False
 
-def update_yaml_exposure(filepath: str, entity_id: str, should_expose: bool) -> bool:
-    """Safely update the expose property of an entity in the YAML file without breaking comments."""
+def update_yaml_domain_exposure(filepath: str, domain: str, should_expose: bool) -> bool:
+    """Comment or uncomment a domain in exposed_domains."""
     if not filepath or not os.path.exists(filepath):
-        _LOGGER.error("Cannot update YAML: File not found.")
         return False
         
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             lines = f.readlines()
             
-        # We need a basic state machine to find google_assistant -> entity_config -> entity_id -> expose
-        in_google_assistant = False
+        in_ga = False
+        in_exposed_domains = False
+        exposed_domains_idx = -1
+        
+        domain_idx = -1
+        domain_indent = ""
+        is_commented = False
+        
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            
+            if stripped.startswith('google_assistant:'):
+                in_ga = True
+                continue
+                
+            if stripped.startswith('exposed_domains:'):
+                in_exposed_domains = True
+                exposed_domains_idx = i
+                continue
+                
+            if in_exposed_domains:
+                if stripped and not stripped.startswith('-') and not stripped.startswith('#') and not stripped.startswith('exposed_domains:'):
+                    if not line.lstrip().startswith('-') and not line.lstrip().startswith('#'):
+                         in_exposed_domains = False
+                
+                # Match `- light` or `- "light"` capturing leading spaces
+                match_active = re.match(r'^(\s*)-\s*(\"?'+ domain + r'\"?)\s*$', line)
+                match_commented = re.match(r'^(\s*)#\s*-\s*(\"?'+ domain + r'\"?)\s*$', line)
+                
+                if match_active:
+                    domain_idx = i
+                    is_commented = False
+                    domain_indent = match_active.group(1)
+                    in_exposed_domains = False
+                    break
+                elif match_commented:
+                    domain_idx = i
+                    is_commented = True
+                    domain_indent = match_commented.group(1)
+                    in_exposed_domains = False
+                    break
+                    
+        if domain_idx != -1:
+            if should_expose and is_commented:
+                # uncomment: replace the first '#' with space or remove it
+                lines[domain_idx] = lines[domain_idx].replace('#', ' ', 1)
+            elif not should_expose and not is_commented:
+                # comment
+                lines[domain_idx] = domain_indent + "# " + lines[domain_idx].lstrip()
+        else:
+            # We need to inject it under exposed_domains
+            if exposed_domains_idx != -1:
+                base_indent_match = re.search(r'^(\s*)', lines[exposed_domains_idx])
+                base_indent = base_indent_match.group(1) if base_indent_match else ""
+                child_indent = base_indent + "  "
+                
+                if should_expose:
+                    new_line = f"{child_indent}- {domain}\n"
+                else:
+                    new_line = f"{child_indent}# - {domain}\n"
+                    
+                lines.insert(exposed_domains_idx + 1, new_line)
+            else:
+                 # No exposed_domains block exists. Need to append it to GA block.
+                 # Very complex to guess correctly without ruamel, avoiding for now to keep it safe.
+                 pass
+                 
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.writelines(lines)
+            
+        return True
+    except Exception as e:
+        _LOGGER.error(f"Failed to write GAIA domain YAML update: {e}")
+        return False
+
+def update_yaml_exposure(filepath: str, entity_id: str, state: str) -> bool:
+    """Safely update, inject, or delete the expose property of an entity in the YAML."""
+    if not filepath or not os.path.exists(filepath):
+         return False
+        
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+            
         in_entity_config = False
         in_target_entity = False
         
@@ -68,14 +198,7 @@ def update_yaml_exposure(filepath: str, entity_id: str, should_expose: bool) -> 
         for i, line in enumerate(lines):
             stripped = line.strip()
             
-            # Skip empty lines or pure comments
             if not stripped or stripped.startswith('#'):
-                continue
-                
-            # If the file is only google_assistant.yaml (via !include), then root is google_assistant inherently 
-            # or it might have google_assistant: at the top.
-            if stripped.startswith('google_assistant:'):
-                in_google_assistant = True
                 continue
                 
             if stripped.startswith('entity_config:'):
@@ -83,66 +206,66 @@ def update_yaml_exposure(filepath: str, entity_id: str, should_expose: bool) -> 
                 entity_config_indent = line[:len(line) - len(line.lstrip())]
                 continue
                 
-            # If we are in entity config, look for our entity ID
             if in_entity_config and stripped.startswith(f"{entity_id}:"):
                 in_target_entity = True
                 target_entity_line_idx = i
                 entity_indent = line[:len(line) - len(line.lstrip())]
                 continue
                 
-            # If we are in our target entity, look for the 'expose:' key
             if in_target_entity:
                 current_indent = len(line) - len(line.lstrip())
-                # If indentation drops back to entity level or lower, we left the entity block
                 if current_indent <= len(entity_indent) and not stripped.startswith('-'):
                     in_target_entity = False
                     continue
                     
                 if stripped.startswith('expose:'):
                     expose_line_idx = i
-                    break # Found it!
+                    break
 
-        # Case 1: The 'expose:' key exists under the entity. We just replace it.
-        expose_str = "true" if should_expose else "false"
-        
-        if expose_line_idx != -1:
-            old_line = lines[expose_line_idx]
-            indent = old_line[:len(old_line) - len(old_line.lstrip())]
-            lines[expose_line_idx] = f"{indent}expose: {expose_str}\n"
-            
-        # Case 2: The entity exists, but has no 'expose:' key. Insert it right after the entity line.
-        elif target_entity_line_idx != -1:
-             # Standard YAML indent is +2 spaces
-             indent = lines[target_entity_line_idx][:len(lines[target_entity_line_idx]) - len(lines[target_entity_line_idx].lstrip())] + "  "
-             lines.insert(target_entity_line_idx + 1, f"{indent}expose: {expose_str}\n")
-             
-        # Case 3: The entity config block exists, but our entity is not in it.
-        elif in_entity_config:
-             # Find where to append - right after entity_config:
-             # We should theoretically find the end of entity config but inserting at the top is easiest
-             for i, line in enumerate(lines):
-                 if line.strip().startswith('entity_config:'):
-                     base_indent = line[:len(line) - len(line.lstrip())]
-                     child_indent = base_indent + "  "
-                     prop_indent = child_indent + "  "
-                     
-                     lines.insert(i + 1, f"{prop_indent}expose: {expose_str}\n")
-                     lines.insert(i + 1, f"{child_indent}{entity_id}:\n")
-                     break
-                     
-        # Case 4: No entity_config block exists. We must inject it.
+        if state == "default":
+             # We need to delete the entity override
+             if target_entity_line_idx != -1:
+                 # Fast delete: We strictly remove the 'expose:' line. 
+                 # If the entity only had an expose key, the empty entity key is harmless to HA.
+                 if expose_line_idx != -1:
+                      lines.pop(expose_line_idx)
+             else:
+                 pass # Was already default
+                 
         else:
-             # This is a bit unsafe without ruamel, but we assume file ends with valid yaml
-             lines.append("\n  entity_config:\n")
-             lines.append(f"    {entity_id}:\n")
-             lines.append(f"      expose: {expose_str}\n")
-             
+            expose_str = "true" if state == "exposed" else "false"
+            
+            if expose_line_idx != -1:
+                old_line = lines[expose_line_idx]
+                indent = old_line[:len(old_line) - len(old_line.lstrip())]
+                lines[expose_line_idx] = f"{indent}expose: {expose_str}\n"
+                
+            elif target_entity_line_idx != -1:
+                 indent = lines[target_entity_line_idx][:len(lines[target_entity_line_idx]) - len(lines[target_entity_line_idx].lstrip())] + "  "
+                 lines.insert(target_entity_line_idx + 1, f"{indent}expose: {expose_str}\n")
+                 
+            elif in_entity_config:
+                 for i, line in enumerate(lines):
+                     if line.strip().startswith('entity_config:'):
+                         base_indent = line[:len(line) - len(line.lstrip())]
+                         child_indent = base_indent + "  "
+                         prop_indent = child_indent + "  "
+                         
+                         lines.insert(i + 1, f"{prop_indent}expose: {expose_str}\n")
+                         lines.insert(i + 1, f"{child_indent}{entity_id}:\n")
+                         break
+                         
+            else:
+                 lines.append("\n  entity_config:\n")
+                 lines.append(f"    {entity_id}:\n")
+                 lines.append(f"      expose: {expose_str}\n")
+                 
         with open(filepath, 'w', encoding='utf-8') as f:
             f.writelines(lines)
             
         return True
     except Exception as e:
-        _LOGGER.error(f"Failed to write GAIA YAML update: {e}")
+        _LOGGER.error(f"Failed to write GAIA YAML entity update: {e}")
         return False
 
 @callback
@@ -159,27 +282,43 @@ def async_register_websockets(hass: HomeAssistant):
 )
 @callback
 def ws_get_entities(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict):
-    """Handle get entities request and populate real exposed status from YAML."""
+    """Handle get entities request and calculate three-state inheritance."""
     entity_reg = er.async_get(hass)
     entities = []
 
     yaml_path = get_google_assistant_yaml_path(hass)
-    entity_configs = read_exposure_from_yaml(yaml_path)
+    entity_configs, exposed_domains, expose_by_default = read_config_from_yaml(yaml_path)
 
     for entity_id, entry in entity_reg.entities.items():
         if entry.disabled_by or entry.hidden_by:
             continue
             
-        # Parse logic: Default to false, check if manually forced to true in YAML
-        is_exposed = False
+        domain = entry.domain
+        
+        # Calculate domain base inheritance
+        domain_exposed = False
+        if domain in exposed_domains:
+             domain_exposed = True
+        elif expose_by_default and not exposed_domains:
+             # Typical HA behavior: if exposed_domains is empty but expose_by_default is true
+             domain_exposed = True
+             
+        # Check for explicit entity override
+        state = "default"
+        is_exposed = domain_exposed
+        
         if entity_id in entity_configs:
-            is_exposed = entity_configs[entity_id].get('expose', False)
+             if 'expose' in entity_configs[entity_id]:
+                 override_exposed = entity_configs[entity_id].get('expose')
+                 is_exposed = override_exposed
+                 state = "exposed" if override_exposed else "hidden"
 
         entities.append({
             "entity_id": entity_id,
-            "domain": entry.domain,
+            "domain": domain,
             "name": entry.name or entry.original_name or entity_id,
             "exposed": is_exposed,
+            "state": state,  # "default", "exposed", "hidden"
             "icon": entry.icon or entry.original_icon
         })
         
@@ -189,23 +328,23 @@ def ws_get_entities(hass: HomeAssistant, connection: websocket_api.ActiveConnect
     {
         vol.Required("type"): "gaia/update_exposure",
         vol.Required("entity_id"): str,
-        vol.Required("expose"): bool,
+        vol.Required("state"): str, # 'default', 'exposed', 'hidden'
     }
 )
 @callback
 def ws_update_exposure(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict):
-    """Handle update exposure request."""
+    """Handle three-state entity update exposure request."""
     entity_id = msg["entity_id"]
-    should_expose = msg["expose"]
-    _LOGGER.info(f"Requested to {'expose' if should_expose else 'hide'} {entity_id} to Google Assistant via YAML")
+    state = msg["state"]
+    _LOGGER.info(f"Requested to set {entity_id} to {state} state via YAML")
     
     yaml_path = get_google_assistant_yaml_path(hass)
-    success = update_yaml_exposure(yaml_path, entity_id, should_expose)
+    success = update_yaml_exposure(yaml_path, entity_id, state)
     
     if success:
         hass.async_create_task(hass.services.async_call("google_assistant", "reload", blocking=False))
         
-    connection.send_result(msg["id"], {"success": success, "entity_id": entity_id, "exposed": should_expose})
+    connection.send_result(msg["id"], {"success": success, "entity_id": entity_id, "state": state})
 
 @websocket_api.websocket_command(
     {
@@ -216,22 +355,13 @@ def ws_update_exposure(hass: HomeAssistant, connection: websocket_api.ActiveConn
 )
 @callback
 def ws_update_domain_exposure(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict):
-    """Handle domain-wide default exposure request."""
+    """Handle domain commenting/uncommenting request."""
     domain = msg["domain"]
     should_expose = msg["expose"]
-    _LOGGER.info(f"Requested to bulk set {domain} domain to {'expose' if should_expose else 'hide'} via YAML")
+    _LOGGER.info(f"Requested to {'uncomment' if should_expose else 'comment'} {domain} under exposed_domains via YAML")
     
     yaml_path = get_google_assistant_yaml_path(hass)
-    entity_reg = er.async_get(hass)
-    
-    success = True
-    for entity_id, entry in entity_reg.entities.items():
-        if entry.disabled_by or entry.hidden_by:
-            continue
-            
-        if entry.domain == domain:
-            if not update_yaml_exposure(yaml_path, entity_id, should_expose):
-                 success = False
+    success = update_yaml_domain_exposure(yaml_path, domain, should_expose)
                  
     if success:
          hass.async_create_task(hass.services.async_call("google_assistant", "reload", blocking=False))

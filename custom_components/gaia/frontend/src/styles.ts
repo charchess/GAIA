@@ -412,4 +412,62 @@ export const styles = `
     margin: 0 0 8px 0;
     color: var(--gaia-text);
 }
+
+.gaia-three-state-toggle {
+    display: inline-flex;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 4px;
+}
+
+.state-btn {
+    border: none;
+    background: transparent;
+    color: var(--gaia-text-sec);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.state-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--gaia-text);
+}
+
+.state-btn.active {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    color: white;
+}
+
+.state-btn.exposed.active {
+    background: var(--gaia-success);
+}
+
+.state-btn.hidden.active {
+    background: var(--gaia-text-sec);
+}
+
+.state-btn.default.active {
+    background: var(--gaia-primary);
+}
+
+@media (prefers-color-scheme: dark) {
+    .gaia-three-state-toggle {
+        background: rgba(0, 0, 0, 0.4);
+    }
+    
+    .state-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .state-btn.active {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+}
 `;

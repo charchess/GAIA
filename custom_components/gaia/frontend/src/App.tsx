@@ -14,6 +14,7 @@ interface GaiaEntity {
     name: string;
     domain: string;
     exposed: boolean;
+    state: 'exposed' | 'hidden' | 'default';
 }
 
 const DOMAIN_ICONS: Record<string, React.ReactNode> = {
@@ -32,11 +33,12 @@ const DOMAIN_ICONS: Record<string, React.ReactNode> = {
     zone: <Map size={18} />, ai_task: <Activity size={18} />, default: <Smartphone size={18} />
 };
 
-const EntityRow = React.memo(({ entity, onToggle }: { entity: GaiaEntity, onToggle: (id: string, exposed: boolean) => void }) => {
+const EntityRow = React.memo(({ entity, onToggle }: { entity: GaiaEntity, onToggle: (id: string, state: 'exposed' | 'hidden' | 'default') => void }) => {
     return (
         <tr className="gaia-table-row">
             <td>
                 <div className="gaia-entity-name">{entity.name}</div>
+                <div style={{ fontSize: '11px', color: 'var(--gaia-text-secondary)', marginTop: '2px', fontFamily: 'monospace' }}>{entity.id}</div>
             </td>
             <td>
                 <span className={`gaia-status-badge ${entity.exposed ? 'gaia-status-exposed' : 'gaia-status-hidden'}`}>
@@ -45,14 +47,27 @@ const EntityRow = React.memo(({ entity, onToggle }: { entity: GaiaEntity, onTogg
                 </span>
             </td>
             <td style={{ textAlign: 'right' }}>
-                <div className="gaia-switch-wrapper">
+                <div className="gaia-three-state-toggle">
                     <button
-                        type="button"
-                        className={`gaia-switch ${entity.exposed ? 'checked' : ''}`}
-                        onClick={() => onToggle(entity.id, entity.exposed)}
+                        className={`state-btn exposed ${entity.state === 'exposed' ? 'active' : ''}`}
+                        onClick={() => onToggle(entity.id, 'exposed')}
+                        title="Force Exposed"
                     >
-                        <span className="gaia-slider"></span>
-                        <span className="gaia-switch-text">{entity.exposed ? 'EXPOSED' : 'HIDDEN'}</span>
+                        EXPOSED
+                    </button>
+                    <button
+                        className={`state-btn default ${entity.state === 'default' ? 'active' : ''}`}
+                        onClick={() => onToggle(entity.id, 'default')}
+                        title="Inherit Domain Default"
+                    >
+                        DEFAULT
+                    </button>
+                    <button
+                        className={`state-btn hidden ${entity.state === 'hidden' ? 'active' : ''}`}
+                        onClick={() => onToggle(entity.id, 'hidden')}
+                        title="Force Hidden"
+                    >
+                        HIDDEN
                     </button>
                 </div>
             </td>
@@ -78,7 +93,8 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                 id: e.entity_id,
                 name: e.name || e.entity_id,
                 domain: e.domain,
-                exposed: e.exposed || false
+                exposed: e.exposed || false,
+                state: e.state || 'default'
             }));
             setEntities(formattedEntities);
         } catch (err: any) {
@@ -93,18 +109,37 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
         if (hass && entities.length === 0) fetchEntities();
     }, [hass]);
 
-    const toggleExposure = async (id: string, currentStatus: boolean) => {
+    const toggleExposure = async (id: string, targetState: 'exposed' | 'hidden' | 'default') => {
         if (!hass) return;
-        setEntities(entities.map(e => e.id === id ? { ...e, exposed: !currentStatus } : e));
+
+        // Optimistic UI update
+        const previousEntities = [...entities];
+        setEntities(entities.map(e => {
+            if (e.id === id) {
+                // Try to guess visual "exposed" boolean status without API. 
+                // If default, we'd need to know if the domain is exposed. 
+                // It's safer to just set the state visual immediately, and let the API sync fix everything later, but let's do a best effort.
+                let isExposed = e.exposed;
+                if (targetState === 'exposed') isExposed = true;
+                if (targetState === 'hidden') isExposed = false;
+                // If default, we really don't know easily without calculating domain state here. 
+                // We will freeze the current visual exposed value until refresh.
+                return { ...e, state: targetState, exposed: targetState === 'default' ? e.exposed : isExposed };
+            }
+            return e;
+        }));
+
         try {
             await hass.connection.sendMessagePromise({
                 type: 'gaia/update_exposure',
                 entity_id: id,
-                expose: !currentStatus
+                state: targetState
             });
+            // We should really fetch fresh state from backend because 'default' can flip 'exposed' boolean depending on domain
+            fetchEntities();
         } catch (err) {
             console.error('Failed to update exposure:', err);
-            setEntities(entities.map(e => e.id === id ? { ...e, exposed: currentStatus } : e));
+            setEntities(previousEntities);
         }
     };
 
