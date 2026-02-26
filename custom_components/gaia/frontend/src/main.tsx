@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
-import './index.css'
+import styles from './index.css?inline'
 
 class GaiaDashboard extends HTMLElement {
     private _hass: any;
@@ -19,13 +19,11 @@ class GaiaDashboard extends HTMLElement {
     }
 
     connectedCallback() {
-        if (!document.getElementById('gaia-dashboard-style')) {
-            const link = document.createElement('link');
-            link.id = 'gaia-dashboard-style';
-            link.rel = 'stylesheet';
-            // We append Date.now() to ensure the browser strictly fetches the latest CSS 
-            link.href = '/gaia_frontend/index.css?v=' + Date.now();
-            document.head.appendChild(link);
+        if (!this.querySelector('#gaia-dashboard-inline-style')) {
+            const styleTemplate = document.createElement('style');
+            styleTemplate.id = 'gaia-dashboard-inline-style';
+            styleTemplate.textContent = styles;
+            this.appendChild(styleTemplate);
         }
 
         if (!this.root) {
