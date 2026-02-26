@@ -170,41 +170,68 @@ def update_yaml_domain_exposure(filepath: str, domain: str, should_expose: bool)
         return False
 
 def update_yaml_exposure(filepath: str, entity_id: str, state: str) -> bool:
-    """Safely update, inject, or delete the expose property of an entity in the YAML."""
+    """Updates a specific entity's expose property in YAML while preserving comments."""
     if not filepath or not os.path.exists(filepath):
-         return False
+        return False
         
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             lines = f.readlines()
             
-        in_entity_config = False
-        in_target_entity = False
+        is_ga_file = filepath.endswith('google_assistant.yaml')
+        
+        ga_start_idx = -1
+        ga_indent = ""
+        base_indent = "" # Indent for children of google_assistant
+        
+        if is_ga_file:
+            ga_start_idx = 0
+            base_indent = ""
+        else:
+            for i, line in enumerate(lines):
+                if re.match(r'^google_assistant:\s*(#.*)?$', line):
+                    ga_start_idx = i
+                    ga_indent = line[:len(line) - len(line.lstrip())]
+                    base_indent = ga_indent + "  "
+                    break
+            if ga_start_idx == -1:
+                _LOGGER.error("Cannot find google_assistant: block in configuration.yaml")
+                return False
+
+        entity_config_idx = -1
+        entity_config_indent = ""
         
         target_entity_line_idx = -1
         expose_line_idx = -1
         other_prop_line_indices = []
-        
-        entity_config_indent = ""
         entity_indent = ""
+        in_target_entity = False
         
-        for i, line in enumerate(lines):
+        for i in range(ga_start_idx if not is_ga_file else 0, len(lines)):
+            line = lines[i]
             stripped = line.strip()
+            current_indent_len = len(line) - len(line.lstrip())
             
             if not stripped or stripped.startswith('#'):
                 continue
                 
+            if not is_ga_file and i > ga_start_idx and current_indent_len <= len(ga_indent):
+                # We have exited the google_assistant block
+                break
+                
             if stripped.startswith('entity_config:'):
-                in_entity_config = True
+                entity_config_idx = i
                 entity_config_indent = line[:len(line) - len(line.lstrip())]
                 continue
                 
-            if in_entity_config and stripped.startswith(f"{entity_id}:") and not in_target_entity:
-                in_target_entity = True
-                target_entity_line_idx = i
-                entity_indent = line[:len(line) - len(line.lstrip())]
-                continue
-                
+            if entity_config_idx != -1 and stripped.startswith(f"{entity_id}:"):
+                # Ensure we are actually a child of entity_config
+                if current_indent_len > len(entity_config_indent):
+                    in_target_entity = True
+                    target_entity_line_idx = i
+                    entity_indent = line[:len(line) - len(line.lstrip())]
+                    continue
+                    
             if in_target_entity:
                 current_indent = len(line) - len(line.lstrip())
                 if current_indent <= len(entity_indent) and not stripped.startswith('-'):
@@ -227,7 +254,6 @@ def update_yaml_exposure(filepath: str, entity_id: str, state: str) -> bool:
                           lines.pop(expose_line_idx)
              else:
                  pass # Was already default
-                 
         else:
             expose_str = "true" if state == "exposed" else "false"
             
@@ -240,22 +266,23 @@ def update_yaml_exposure(filepath: str, entity_id: str, state: str) -> bool:
                  indent = lines[target_entity_line_idx][:len(lines[target_entity_line_idx]) - len(lines[target_entity_line_idx].lstrip())] + "  "
                  lines.insert(target_entity_line_idx + 1, f"{indent}expose: {expose_str}\n")
                  
-            elif in_entity_config:
-                 for i, line in enumerate(lines):
-                     if line.strip().startswith('entity_config:'):
-                         base_indent = line[:len(line) - len(line.lstrip())]
-                         child_indent = base_indent + "  "
-                         prop_indent = child_indent + "  "
-                         
-                         lines.insert(i + 1, f"{prop_indent}expose: {expose_str}\n")
-                         lines.insert(i + 1, f"{child_indent}{entity_id}:\n")
-                         break
-                         
-            else:
-                 lines.append("\n  entity_config:\n")
-                 lines.append(f"    {entity_id}:\n")
-                 lines.append(f"      expose: {expose_str}\n")
+            elif entity_config_idx != -1:
+                 # Just inject it physically directly under entity_config:
+                 child_indent = entity_config_indent + "  "
+                 prop_indent = child_indent + "  "
+                 lines.insert(entity_config_idx + 1, f"{prop_indent}expose: {expose_str}\n")
+                 lines.insert(entity_config_idx + 1, f"{child_indent}{entity_id}:\n")
                  
+            else:
+                 # No entity_config exists! Inject it safely inside ga_block
+                 inject_idx = ga_start_idx + 1 if not is_ga_file else 0
+                 
+                 lines.insert(inject_idx, f"{base_indent}    expose: {expose_str}\n")
+                 lines.insert(inject_idx, f"{base_indent}  {entity_id}:\n")
+                 lines.insert(inject_idx, f"{base_indent}entity_config:\n")
+                 if is_ga_file and len(lines) > 3 and not lines[3].endswith('\n') and not lines[3].isspace():
+                     pass # lines.insert(inject_idx + 3, "\n")
+                     
         with open(filepath, 'w', encoding='utf-8') as f:
             f.writelines(lines)
             
