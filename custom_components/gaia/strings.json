@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Set up GAIA",
+                "description": "Do you want to set up GAIA - Google Assistant Integration Administrator?"
+            }
+        },
+        "abort": {
+            "single_instance_allowed": "Only a single instance of GAIA is allowed."
+        }
+    }
+}
