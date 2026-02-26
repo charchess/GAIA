@@ -191,6 +191,7 @@ def update_yaml_exposure(filepath: str, entity_id: str, state: str) -> bool:
         
         target_entity_line_idx = -1
         expose_line_idx = -1
+        other_prop_line_indices = []
         
         entity_config_indent = ""
         entity_indent = ""
@@ -206,7 +207,7 @@ def update_yaml_exposure(filepath: str, entity_id: str, state: str) -> bool:
                 entity_config_indent = line[:len(line) - len(line.lstrip())]
                 continue
                 
-            if in_entity_config and stripped.startswith(f"{entity_id}:"):
+            if in_entity_config and stripped.startswith(f"{entity_id}:") and not in_target_entity:
                 in_target_entity = True
                 target_entity_line_idx = i
                 entity_indent = line[:len(line) - len(line.lstrip())]
@@ -220,15 +221,18 @@ def update_yaml_exposure(filepath: str, entity_id: str, state: str) -> bool:
                     
                 if stripped.startswith('expose:'):
                     expose_line_idx = i
-                    break
+                else:
+                    other_prop_line_indices.append(i)
 
         if state == "default":
-             # We need to delete the entity override
              if target_entity_line_idx != -1:
-                 # Fast delete: We strictly remove the 'expose:' line. 
-                 # If the entity only had an expose key, the empty entity key is harmless to HA.
                  if expose_line_idx != -1:
-                      lines.pop(expose_line_idx)
+                      if len(other_prop_line_indices) == 0:
+                          # Both expose and the entity parent must be removed. Pop highest index first.
+                          lines.pop(expose_line_idx)
+                          lines.pop(target_entity_line_idx)
+                      else:
+                          lines.pop(expose_line_idx)
              else:
                  pass # Was already default
                  
