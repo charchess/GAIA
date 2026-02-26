@@ -1,30 +1,5 @@
 import logging
 import os
-import yaml
-import voluptuous as vol
-
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.components import websocket_api
-from homeassistant.helpers import entity_registry as er
-
-_LOGGER = logging.getLogger(__name__)
-
-def get_google_assistant_yaml_path(hass: HomeAssistant) -> str | None:
-    """Find the path to the google_assistant configuration file."""
-    # First, try to see if there is a standalone google_assistant.yaml
-    ga_path = hass.config.path("google_assistant.yaml")
-    if os.path.exists(ga_path):
-        return ga_path
-        
-    # If not, assume it's directly in configuration.yaml
-    config_path = hass.config.path("configuration.yaml")
-    if os.path.exists(config_path):
-        return config_path
-        
-    return None
-
-import logging
-import os
 import re
 import yaml
 import voluptuous as vol
@@ -86,11 +61,14 @@ def read_config_from_yaml(filepath: str) -> tuple[dict, list, bool]:
                 if match:
                     exposed_domains.append(match.group(1))
                     
-        # Now use safe_load for the rest
+        # Now use safe_load for the rest, but sanitize HA tags like !secret to prevent PyYAML crash
         with open(filepath, 'r', encoding='utf-8') as f:
-            config = yaml.safe_load(f) or {}
+            raw_yaml = f.read()
             
-            ga_config = config.get('google_assistant', config) if isinstance(config, dict) else config
+        sanitized_yaml = re.sub(r'!\w+\s+[^\n]+', '"dummy_tag"', raw_yaml)
+        config = yaml.safe_load(sanitized_yaml) or {}
+            
+        ga_config = config.get('google_assistant', config) if isinstance(config, dict) else config
             
             if isinstance(ga_config, dict):
                  entity_config = ga_config.get('entity_config', {})
