@@ -36,7 +36,6 @@ const EntityRow = React.memo(({ entity, mode, onToggle }: { entity: GaiaEntity, 
     // Mode 'hide': Switch is labeled "Exposed". ON (green) means entity.exposed is true.
     const isSwitchOn = mode === 'expose' ? !entity.exposed : entity.exposed;
     const switchClass = mode === 'expose' ? 'gaia-switch-red' : 'gaia-switch-green';
-    const actionLabel = mode === 'expose' ? 'Hidden' : 'Exposed';
 
     return (
         <tr className="gaia-table-row">
@@ -51,13 +50,13 @@ const EntityRow = React.memo(({ entity, mode, onToggle }: { entity: GaiaEntity, 
             </td>
             <td style={{ textAlign: 'right' }}>
                 <div className="gaia-switch-wrapper">
-                    <span className="gaia-switch-label">{actionLabel}</span>
                     <button
                         type="button"
                         className={`gaia-switch ${switchClass} ${isSwitchOn ? 'checked' : ''}`}
                         onClick={() => onToggle(entity.id, entity.exposed)}
                     >
                         <span className="gaia-slider"></span>
+                        <span className="gaia-switch-text">{entity.exposed ? 'EXPOSED' : 'HIDDEN'}</span>
                     </button>
                 </div>
             </td>

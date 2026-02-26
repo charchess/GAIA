@@ -303,58 +303,63 @@ export const styles = `
     gap: 12px;
 }
 
-.gaia-switch-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--gaia-text-sec);
-}
-
 .gaia-switch {
+    display: inline-flex;
+    align-items: center;
     position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
+    width: 96px;
+    height: 36px;
     border: none;
-    background: transparent;
     padding: 0;
     outline: none;
+    border-radius: 36px;
+    cursor: pointer;
+    background-color: var(--gaia-border);
+    transition: background-color 0.3s;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .gaia-slider {
     position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--gaia-border);
-    transition: .3s;
-    border-radius: 24px;
-}
-
-.gaia-slider:before {
-    position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
+    width: 28px;
+    height: 28px;
+    left: 4px;
+    bottom: 4px;
     background-color: white;
-    transition: .3s;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border-radius: 50%;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 2;
 }
 
-.gaia-switch.gaia-switch-red.checked .gaia-slider {
+.gaia-switch-text {
+    position: absolute;
+    width: 60px;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--gaia-text-sec);
+    right: 4px;
+    transition: 0.3s;
+    z-index: 1;
+}
+
+.gaia-switch.checked .gaia-slider {
+    transform: translateX(60px);
+}
+
+.gaia-switch.checked .gaia-switch-text {
+    right: auto;
+    left: 4px;
+    color: white;
+}
+
+.gaia-switch.gaia-switch-red.checked {
     background-color: var(--gaia-danger);
 }
 
-.gaia-switch.gaia-switch-green.checked .gaia-slider {
+.gaia-switch.gaia-switch-green.checked {
     background-color: var(--gaia-success);
-}
-
-.gaia-switch.checked .gaia-slider:before {
-    transform: translateX(20px);
 }
 
 .gaia-spin {
