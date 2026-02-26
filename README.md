@@ -10,6 +10,25 @@ Instead of manually typing out `entity_id` lists or navigating complex YAML conf
 - **Set Domain Defaults:** Choose whether entire domains (like all your `light` or `switch` entities) are exposed or hidden by default.
 - **Manage Individual Exceptions:** Quickly toggle specific entities on or off, creating exceptions to your global domain rules.
 
+### 🚨 CRITICAL SETUP REQUIREMENT 🚨
+If you configure `google_assistant` manually instead of using Home Assistant Cloud (Nabu Casa), **Home Assistant locks its native UI and GAIA** if you define exposure filters in YAML. 
+
+For GAIA to work, you **must delete all exposure filters** from your `configuration.yaml`. Your configuration should be completely stripped down to just the authentication:
+
+```yaml
+# ✅ CORRECT GAIA CONFIGURATION:
+google_assistant:
+  project_id: yours
+  service_account: !include service.json
+  report_state: true
+
+# ❌ REMOVE THESE FROM YOUR YAML:
+# expose_by_default: false
+# exposed_domains: ...
+# entity_config: ...
+```
+Once you delete these filters and restart Home Assistant, it unlocks the internal database and hands full control over to the GAIA Dashboard!
+
 ![GAIA Dashboard Preview](preview.png)
 
 ## Features
