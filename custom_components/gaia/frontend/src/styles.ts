@@ -413,61 +413,108 @@ export const styles = `
     color: var(--gaia-text);
 }
 
-.gaia-three-state-toggle {
+.gaia-bimodal-switch {
     display: inline-flex;
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    padding: 3px;
-    gap: 4px;
-}
-
-.state-btn {
+    align-items: center;
+    position: relative;
+    width: 130px;
+    height: 32px;
     border: none;
-    background: transparent;
-    color: var(--gaia-text-sec);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 6px 12px;
+    padding: 0;
+    outline: none;
     border-radius: 6px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    background-color: var(--gaia-border);
+    transition: background-color 0.3s;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
 }
 
-.state-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-    color: var(--gaia-text);
+.gaia-bimodal-switch .bg-track {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.1);
+    z-index: 0;
 }
 
-.state-btn.active {
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    color: white;
+.gaia-bimodal-switch.default .bg-track {
+    background: rgba(0,0,0,0.2);
 }
 
-.state-btn.exposed.active {
+.gaia-bimodal-switch.override-exposed.overridden .bg-track {
     background: var(--gaia-success);
 }
 
-.state-btn.hidden.active {
+.gaia-bimodal-switch.override-hidden.overridden .bg-track {
     background: var(--gaia-text-sec);
 }
 
-.state-btn.default.active {
-    background: var(--gaia-primary);
+.gaia-bimodal-switch .gaia-slider {
+    position: absolute;
+    width: 60px;
+    height: 26px;
+    left: 4px;
+    bottom: 3px;
+    background-color: white;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    z-index: 2;
+}
+
+.gaia-bimodal-switch.overridden .gaia-slider {
+    transform: translateX(62px);
+}
+
+/* Specific styling if dark mode */
+@media (prefers-color-scheme: dark) {
+    .gaia-bimodal-switch .gaia-slider {
+        background-color: #374151; /* Darker slider for less contrast */
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+}
+
+.labels-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.gaia-bimodal-switch .label-left,
+.gaia-bimodal-switch .label-right {
+    width: 60px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gaia-text-sec);
+    letter-spacing: 0.5px;
+    z-index: 3;
+    transition: color 0.3s;
+}
+
+/* Highlight the active label text */
+.gaia-bimodal-switch.default .label-left {
+    color: var(--gaia-text);
+}
+
+.gaia-bimodal-switch.overridden .label-right {
+    color: white;
 }
 
 @media (prefers-color-scheme: dark) {
-    .gaia-three-state-toggle {
-        background: rgba(0, 0, 0, 0.4);
+    .gaia-bimodal-switch.overridden .label-right {
+        color: #e5e7eb;
     }
-    
-    .state-btn:hover {
-        background: rgba(255, 255, 255, 0.05);
-    }
-    
-    .state-btn.active {
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    .gaia-bimodal-switch.default .label-left {
+        color: #e5e7eb;
     }
 }
 `;

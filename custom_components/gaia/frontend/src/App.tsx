@@ -33,7 +33,34 @@ const DOMAIN_ICONS: Record<string, React.ReactNode> = {
     zone: <Map size={18} />, ai_task: <Activity size={18} />, default: <Smartphone size={18} />
 };
 
-const EntityRow = React.memo(({ entity, onToggle }: { entity: GaiaEntity, onToggle: (id: string, state: 'exposed' | 'hidden' | 'default') => void }) => {
+const EntityRow = React.memo(({
+    entity,
+    domainExposed,
+    onToggle
+}: {
+    entity: GaiaEntity,
+    domainExposed: boolean,
+    onToggle: (id: string, state: 'exposed' | 'hidden' | 'default') => void
+}) => {
+
+    // Determine the two possible states for this entity based on its parent's domain state
+    const isDomainExposed = domainExposed;
+
+    // If domain is exposed: Default = Exposed, Override = Hidden
+    // If domain is hidden: Default = Hidden, Override = Exposed
+    const isOverridden = entity.state !== 'default';
+    const isOverrideExposed = !isDomainExposed; // If domain is hidden, the override is to expose it
+
+    const handleToggle = () => {
+        if (isOverridden) {
+            // Revert to default
+            onToggle(entity.id, 'default');
+        } else {
+            // Activate the override
+            onToggle(entity.id, isOverrideExposed ? 'exposed' : 'hidden');
+        }
+    };
+
     return (
         <tr className="gaia-table-row">
             <td style={{ verticalAlign: 'middle' }}>
@@ -47,28 +74,34 @@ const EntityRow = React.memo(({ entity, onToggle }: { entity: GaiaEntity, onTogg
                 </span>
             </td>
             <td style={{ textAlign: 'right', verticalAlign: 'middle' }}>
-                <div className="gaia-three-state-toggle">
+                <div className="gaia-switch-wrapper">
                     <button
-                        className={`state-btn exposed ${entity.state === 'exposed' ? 'active' : ''}`}
-                        onClick={() => onToggle(entity.id, 'exposed')}
-                        title="Force Exposed"
+                        type="button"
+                        className={`gaia-bimodal-switch ${isOverridden ? 'overridden' : 'default'} ${isOverrideExposed ? 'override-exposed' : 'override-hidden'}`}
+                        onClick={handleToggle}
+                        title={isOverridden ? "Click to return to Default behavior" : "Click to Override Domain behavior"}
                     >
-                        EXPOSED
+                        <div className="bg-track"></div>
+                        <span className="gaia-slider"></span>
+
+                        {/* Labels for the track */}
+                        <div className="labels-container">
+                            {isDomainExposed ? (
+                                <>
+                                    <span className="label-left">DEFAULT</span>
+                                    <span className="label-right">HIDDEN</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="label-left">DEFAULT</span>
+                                    <span className="label-right">EXPOSED</span>
+                                </>
+                            )}
+                        </div>
                     </button>
-                    <button
-                        className={`state-btn default ${entity.state === 'default' ? 'active' : ''}`}
-                        onClick={() => onToggle(entity.id, 'default')}
-                        title="Inherit Domain Default"
-                    >
-                        DEFAULT
-                    </button>
-                    <button
-                        className={`state-btn hidden ${entity.state === 'hidden' ? 'active' : ''}`}
-                        onClick={() => onToggle(entity.id, 'hidden')}
-                        title="Force Hidden"
-                    >
-                        HIDDEN
-                    </button>
+                    {entity.state !== 'default' && (
+                        <span style={{ fontSize: '10px', color: 'var(--gaia-primary)', marginLeft: '8px', fontWeight: 'bold' }}>OVERRIDE</span>
+                    )}
                 </div>
             </td>
         </tr>
@@ -290,13 +323,24 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredEntities.map(entity => (
-                                        <EntityRow
-                                            key={entity.id}
-                                            entity={entity}
-                                            onToggle={toggleExposure}
-                                        />
-                                    ))}
+                                    {filteredEntities.map(entity => {
+                                        // A domain is exposed if its currentMode is 'expose'
+                                        const dMode = domainModes[entity.domain];
+                                        // In absence of real server domain state fed to the frontend initially, 
+                                        // let's approximate it. GA requests `domainModes` when clicked.
+                                        // We should really get domain status from API. But for right now, the user uses the global switch to set it.
+                                        // If it's exposed globally, activeTab currentMode will be expose.
+                                        const isDomainExposed = dMode === 'expose';
+
+                                        return (
+                                            <EntityRow
+                                                key={entity.id}
+                                                entity={entity}
+                                                domainExposed={isDomainExposed}
+                                                onToggle={toggleExposure}
+                                            />
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
