@@ -4,10 +4,13 @@ GAIA is a modern, responsive, and easy-to-use custom panel for Home Assistant to
 
 ## Features
 
-- **Beautiful React Dashboard**: Clean UI designed with user experience in mind.
-- **Dynamic Inventory**: Automatically groups your entities by domain (`light`, `switch`, `climate`, etc.).
+- **Beautiful React Dashboard**: Clean "glassmorphism" UI with dark/light mode support.
+- **Dynamic Inventory**: Automatically groups your entities by domain (`light`, `switch`, `climate`, etc.) using a wrapping tab grid with official `lucide-react` icons.
 - **Live Search & Filter**: Easily find the exact entity you want to expose or hide.
-- **One-Click Exposure**: Toggle entity exposure to Google Assistant seamlessly.
+- **Global Domain Overrides**: Set a domain to "EXPOSE" or "HIDE" by default using the massive blue toggle switch.
+- **One-Click Exceptions**: Use the custom-built, physical-styled text toggles to create individual exceptions (Red/Green or Grey/Black depending on the Global Mode) for each entity.
+
+![GAIA Dashboard Preview](preview.png)
 
 ## Installation via HACS (Recommended)
 
