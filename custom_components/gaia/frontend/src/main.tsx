@@ -23,6 +23,7 @@ class GaiaDashboard extends HTMLElement {
             const link = document.createElement('link');
             link.id = 'gaia-dashboard-style';
             link.rel = 'stylesheet';
+            // We append Date.now() to ensure the browser strictly fetches the latest CSS 
             link.href = '/gaia_frontend/index.css?v=' + Date.now();
             document.head.appendChild(link);
         }
