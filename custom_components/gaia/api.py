@@ -70,10 +70,10 @@ def read_config_from_yaml(filepath: str) -> tuple[dict, list, bool]:
             
         ga_config = config.get('google_assistant', config) if isinstance(config, dict) else config
             
-            if isinstance(ga_config, dict):
-                 entity_config = ga_config.get('entity_config', {})
-                 expose_by_default = ga_config.get('expose_by_default', False)
-                 return entity_config, exposed_domains, expose_by_default
+        if isinstance(ga_config, dict):
+             entity_config = ga_config.get('entity_config', {})
+             expose_by_default = ga_config.get('expose_by_default', False)
+             return entity_config, exposed_domains, expose_by_default
                  
     except Exception as e:
         _LOGGER.error(f"Error reading YAML for GAIA: {e}")
