@@ -12,7 +12,7 @@ from homeassistant.components.frontend import async_register_built_in_panel
 from homeassistant.components.http import StaticPathConfig
 
 from .api import async_register_websockets
-from .const import DOMAIN, PANEL_NAME, PANEL_TITLE, PANEL_ICON, PANEL_URL_PATH
+from .const import DOMAIN, DOMAIN_VERSION, PANEL_NAME, PANEL_TITLE, PANEL_ICON, PANEL_URL_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "name": PANEL_NAME,
                 "embed_iframe": False,
                 "trust_external": False,
-                "module_url": "/gaia_frontend/index.js",
+                "module_url": f"/gaia_frontend/index.js?v={DOMAIN_VERSION}",
             }
         },
         require_admin=True,

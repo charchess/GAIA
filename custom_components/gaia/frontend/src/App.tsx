@@ -178,7 +178,7 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                     className={`gaia-tab ${activeTab === 'all' ? 'active' : ''}`}
                     onClick={() => setActiveTab('all')}
                 >
-                    <LayoutDashboard size={16} /> All Entities <span className="gaia-tab-badge">{stats.total}</span>
+                    <LayoutDashboard size={16} /> All Entities ({stats.total})
                 </button>
                 {Object.entries(domainCounts).map(([domain, count]) => (
                     <button
@@ -187,8 +187,7 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                         onClick={() => setActiveTab(domain)}
                     >
                         {DOMAIN_ICONS[domain] || DOMAIN_ICONS.default}
-                        <span style={{ textTransform: 'capitalize' }}>{domain.replace(/_/g, ' ')}</span>
-                        <span className="gaia-tab-badge">{count}</span>
+                        <span style={{ textTransform: 'capitalize' }}>{domain.replace(/_/g, ' ')} ({count})</span>
                     </button>
                 ))}
             </div>
