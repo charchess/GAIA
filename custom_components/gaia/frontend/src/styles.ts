@@ -1,3 +1,4 @@
+export const styles = `
 :root {
     --gaia-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --gaia-primary: var(--primary-color, #03a9f4);
@@ -401,3 +402,4 @@
     margin: 0 0 8px 0;
     color: var(--gaia-text);
 }
+`;

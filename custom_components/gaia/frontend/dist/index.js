@@ -257,4 +257,408 @@ Error generating stack: `+i.message+`
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const ih=[["path",{d:"M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z",key:"1xq2db"}]],oh=L("zap",ih),bu={light:g.jsx(zp,{size:18}),switch:g.jsx(Hp,{size:18}),climate:g.jsx(bp,{size:18}),alarm_control_panel:g.jsx(Yp,{size:18}),binary_sensor:g.jsx(qu,{size:18}),button:g.jsx(Fp,{size:18}),calendar:g.jsx(tp,{size:18}),camera:g.jsx(rp,{size:18}),conversation:g.jsx(Op,{size:18}),cover:g.jsx(bd,{size:18}),device_tracker:g.jsx(Mp,{size:18}),event:g.jsx(oh,{size:18}),fan:g.jsx(lh,{size:18}),image:g.jsx(wp,{size:18}),input_boolean:g.jsx(qu,{size:18}),input_datetime:g.jsx(Xu,{size:18}),input_number:g.jsx(Zu,{size:18}),input_select:g.jsx(Ju,{size:18}),lock:g.jsx(_p,{size:18}),media_player:g.jsx($p,{size:18}),number:g.jsx(Zu,{size:18}),person:g.jsx(nh,{size:18}),remote:g.jsx(yp,{size:18}),scene:g.jsx(Jp,{size:18}),script:g.jsx(gp,{size:18}),select:g.jsx(Ju,{size:18}),sensor:g.jsx(Gu,{size:18}),stt:g.jsx(Hi,{size:18}),tts:g.jsx(Hi,{size:18}),time:g.jsx(Xu,{size:18}),todo:g.jsx(ip,{size:18}),update:g.jsx(Tr,{size:18}),vacuum:g.jsx(hc,{size:18}),water_heater:g.jsx(hp,{size:18}),weather:g.jsx(dp,{size:18}),zone:g.jsx(Tp,{size:18}),ai_task:g.jsx(Gu,{size:18}),default:g.jsx(Xp,{size:18})},uh=ca.memo(({entity:e,mode:t,onToggle:n})=>{const r=t==="expose"?!e.exposed:e.exposed,l=t==="expose"?"gaia-switch-red":"gaia-switch-green",i=t==="expose"?"Hidden":"Exposed";return g.jsxs("tr",{className:"gaia-table-row",children:[g.jsx("td",{children:g.jsx("div",{className:"gaia-entity-name",children:e.name})}),g.jsx("td",{children:g.jsxs("span",{className:`gaia-status-badge ${e.exposed?"gaia-status-exposed":"gaia-status-hidden"}`,children:[e.exposed?g.jsx(up,{size:14}):g.jsx(sp,{size:14}),e.exposed?"Exposed":"Hidden"]})}),g.jsx("td",{style:{textAlign:"right"},children:g.jsxs("div",{className:"gaia-switch-wrapper",children:[g.jsx("span",{className:"gaia-switch-label",children:i}),g.jsxs("label",{className:`gaia-switch ${l}`,children:[g.jsx("input",{type:"checkbox",checked:r,onChange:()=>n(e.id,e.exposed)}),g.jsx("span",{className:"gaia-slider"})]})]})})]})});function ah({hass:e,panel:t}){const[n,r]=ee.useState([]),[l,i]=ee.useState("all"),[o,u]=ee.useState(""),[a,c]=ee.useState(!1),[m,h]=ee.useState(null),[p,w]=ee.useState({}),S=async()=>{if(e){c(!0),h(null);try{const x=(await e.connection.sendMessagePromise({type:"gaia/get_entities"})).map(_=>({id:_.entity_id,name:_.name||_.entity_id,domain:_.domain,exposed:_.exposed||!1}));r(x)}catch(v){console.error("Failed to fetch GAIA entities:",v),h("Could not connect to Home Assistant API. Ensure GAIA is running.")}finally{c(!1)}}};ee.useEffect(()=>{e&&n.length===0&&S()},[e]);const E=async(v,x)=>{if(e){r(n.map(_=>_.id===v?{..._,exposed:!x}:_));try{await e.connection.sendMessagePromise({type:"gaia/update_exposure",entity_id:v,expose:!x})}catch(_){console.error("Failed to update exposure:",_),r(n.map(z=>z.id===v?{...z,exposed:x}:z))}}},I=ee.useMemo(()=>{const v={};return n.forEach(x=>v[x.domain]=(v[x.domain]||0)+1),Object.fromEntries(Object.entries(v).sort(([x],[_])=>x.localeCompare(_)))},[n]),f=ee.useMemo(()=>{let v=n;if(l!=="all"&&(v=v.filter(x=>x.domain===l)),o){const x=o.toLowerCase();v=v.filter(_=>_.name.toLowerCase().includes(x))}return v.sort((x,_)=>x.name.localeCompare(_.name))},[n,l,o]),s={total:n.length,exposed:n.filter(v=>v.exposed).length,hidden:n.filter(v=>!v.exposed).length};if(!e)return g.jsxs("div",{className:"gaia-loading-screen",children:[g.jsx(Tr,{size:48,className:"gaia-spin",style:{marginBottom:"16px",opacity:.5}}),g.jsx("h2",{children:"Connecting to Home Assistant API..."})]});const d=p[l]||"hide",y=v=>w(x=>({...x,[l]:v}));return g.jsxs("div",{className:"gaia-app gaia-fade-in",children:[g.jsxs("header",{className:"gaia-header",children:[g.jsxs("div",{className:"gaia-header-title",children:[g.jsx(Hi,{size:28,style:{color:"var(--gaia-primary)"}}),g.jsx("h1",{children:"GAIA Exposure Manager"})]}),g.jsxs("div",{className:"gaia-header-actions",children:[g.jsxs("div",{className:"gaia-search",children:[g.jsx(Wp,{size:18,className:"gaia-search-icon"}),g.jsx("input",{type:"text",placeholder:"Search entities by name...",value:o,onChange:v=>u(v.target.value)})]}),g.jsxs("button",{className:"gaia-btn",onClick:S,disabled:a,children:[g.jsx(Tr,{size:16,className:a?"gaia-spin":""})," Refresh"]})]})]}),g.jsxs("div",{className:"gaia-tabs-container",children:[g.jsxs("button",{className:`gaia-tab ${l==="all"?"active":""}`,onClick:()=>i("all"),children:[g.jsx(Cp,{size:16})," All Entities (",s.total,")"]}),Object.entries(I).map(([v,x])=>g.jsxs("button",{className:`gaia-tab ${l===v?"active":""}`,onClick:()=>i(v),children:[bu[v]||bu.default,g.jsxs("span",{style:{textTransform:"capitalize"},children:[v.replace(/_/g," ")," (",x,")"]})]},v))]}),g.jsxs("main",{className:"gaia-main-area",children:[m&&g.jsxs("div",{className:"gaia-error-banner",children:[g.jsx("strong",{children:"Error: "})," ",m]}),a&&n.length===0?g.jsxs("div",{className:"gaia-empty-state",children:[g.jsx(Tr,{size:48,className:"gaia-spin",style:{opacity:.3,marginBottom:"24px"}}),g.jsx("h3",{children:"Loading your Home Assistant environment..."})]}):f.length===0?g.jsxs("div",{className:"gaia-empty-state",children:[g.jsx(hc,{size:48,style:{opacity:.2,marginBottom:"24px"}}),g.jsx("h3",{children:"No entities found"}),g.jsx("p",{children:"Try adjusting your search criteria or select another tab."})]}):g.jsxs("div",{className:"gaia-card",children:[l!=="all"&&g.jsx("div",{className:"gaia-card-header",children:g.jsxs("div",{className:"gaia-global-switch",children:[g.jsx("span",{className:"gaia-global-label",children:"Global Default View:"}),g.jsxs("div",{className:"gaia-segment-control",children:[g.jsx("button",{className:`gaia-segment-btn ${d==="hide"?"active-hide":""}`,onClick:()=>y("hide"),children:"Hide"}),g.jsx("button",{className:`gaia-segment-btn ${d==="expose"?"active-expose":""}`,onClick:()=>y("expose"),children:"Expose"})]}),g.jsx("p",{className:"gaia-global-desc",children:d==="hide"?"Entities are Hidden by default. Use switches to Expose them (Green).":"Entities are Exposed by default. Use switches to explicitly Hide them (Red)."})]})}),g.jsx("div",{className:"gaia-table-container",children:g.jsxs("table",{className:"gaia-table",children:[g.jsx("thead",{children:g.jsxs("tr",{children:[g.jsx("th",{children:"Entity Name"}),g.jsx("th",{children:"Current Status"}),g.jsx("th",{style:{textAlign:"right"},children:"Toggle Action"})]})}),g.jsx("tbody",{children:f.map(v=>g.jsx(uh,{entity:v,mode:l==="all"?"hide":d,onToggle:E},v.id))})]})})]})]})]})}const sh=':root{--gaia-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;--gaia-primary: var(--primary-color, #03a9f4);--gaia-success: var(--success-color, #10b981);--gaia-danger: var(--error-color, #ef4444);--gaia-text: var(--primary-text-color, #1f2937);--gaia-text-sec: var(--secondary-text-color, #6b7280);--gaia-bg: #f9fafb;--gaia-card-bg: #ffffff;--gaia-border: #e5e7eb}@media (prefers-color-scheme: dark){:root{--gaia-text: var(--primary-text-color, #f9fafb);--gaia-text-sec: var(--secondary-text-color, #9ca3af);--gaia-bg: #111827;--gaia-card-bg: #1f2937;--gaia-border: #374151}}*{box-sizing:border-box}.gaia-loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;color:var(--gaia-text);font-family:var(--gaia-font)}.gaia-app{display:flex;flex-direction:column;height:calc(100vh - 56px);background-color:var(--gaia-bg);color:var(--gaia-text);font-family:var(--gaia-font)}.gaia-header{display:flex;justify-content:space-between;align-items:center;padding:24px 32px;background-color:var(--gaia-card-bg)}.gaia-header-title{display:flex;align-items:center;gap:12px}.gaia-header-title h1{margin:0;font-size:1.5rem;font-weight:700;color:var(--gaia-text);letter-spacing:-.5px}.gaia-header-actions{display:flex;align-items:center;gap:16px}.gaia-search{display:flex;align-items:center;background:var(--gaia-bg);border:1px solid var(--gaia-border);border-radius:8px;padding:0 12px;width:280px}.gaia-search input{border:none;background:transparent;padding:10px;width:100%;color:var(--gaia-text);outline:none;font-family:var(--gaia-font)}.gaia-search-icon{color:var(--gaia-text-sec)}.gaia-btn{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:8px;border:1px solid var(--gaia-border);background:var(--gaia-card-bg);color:var(--gaia-text);cursor:pointer;transition:all .2s;font-weight:500;font-family:var(--gaia-font)}.gaia-btn:hover{background:var(--gaia-bg)}.gaia-tabs-container{display:flex;gap:8px;padding:0 32px;background-color:var(--gaia-card-bg);border-bottom:1px solid var(--gaia-border);overflow-x:auto;scrollbar-width:none}.gaia-tabs-container::-webkit-scrollbar{display:none}.gaia-tab{display:flex;align-items:center;gap:8px;padding:16px 4px;margin-right:24px;border:none;background:none;color:var(--gaia-text-sec);font-weight:500;font-size:.95rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;font-family:var(--gaia-font);white-space:nowrap}.gaia-tab:hover{color:var(--gaia-text)}.gaia-tab.active{color:var(--gaia-primary);border-bottom:2px solid var(--gaia-primary);font-weight:600}.gaia-tab-badge{background:var(--gaia-border);color:var(--gaia-text-sec);font-size:.75rem;padding:2px 8px;border-radius:12px}.gaia-tab.active .gaia-tab-badge{background:#03a9f41a;color:var(--gaia-primary)}.gaia-main-area{flex:1;padding:32px;overflow-y:auto}.gaia-card{background:var(--gaia-card-bg);border-radius:12px;border:1px solid var(--gaia-border);overflow:hidden;box-shadow:0 1px 3px #0000000d}.gaia-card-header{padding:20px 24px;border-bottom:1px solid var(--gaia-border);background-color:#00000005}.gaia-global-switch{display:flex;align-items:center;gap:16px}.gaia-global-label{font-weight:600;color:var(--gaia-text)}.gaia-segment-control{display:flex;background:var(--gaia-bg);border-radius:8px;padding:4px;border:1px solid var(--gaia-border)}.gaia-segment-btn{padding:6px 16px;border-radius:6px;border:none;background:transparent;color:var(--gaia-text-sec);cursor:pointer;font-weight:600;font-family:var(--gaia-font);transition:all .2s}.gaia-segment-btn.active-hide,.gaia-segment-btn.active-expose{background:var(--gaia-card-bg);color:var(--gaia-text);box-shadow:0 1px 2px #0000001a}.gaia-global-desc{margin:0 0 0 auto;font-size:.85rem;color:var(--gaia-text-sec)}.gaia-table-container{overflow-x:auto;content-visibility:auto;contain-intrinsic-size:500px}.gaia-table{width:100%;border-collapse:collapse}.gaia-table th{text-align:left;padding:12px 24px;color:var(--gaia-text-sec);font-size:.8rem;text-transform:uppercase;border-bottom:1px solid var(--gaia-border)}.gaia-table td{padding:16px 24px;border-bottom:1px solid var(--gaia-border);vertical-align:middle}.gaia-table tr:hover td{background:#00000005}.gaia-entity-name{font-weight:600;font-size:1.05rem}.gaia-status-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:12px;font-size:.8rem;font-weight:600}.gaia-status-exposed{background:#10b9811a;color:var(--gaia-success)}.gaia-status-hidden{background:#6b72801a;color:var(--gaia-text-sec)}.gaia-switch-wrapper{display:inline-flex;align-items:center;gap:12px}.gaia-switch-label{font-size:.85rem;font-weight:600;color:var(--gaia-text-sec)}.gaia-switch{position:relative;display:inline-block;width:44px;height:24px}.gaia-switch input{opacity:0;width:0;height:0}.gaia-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:var(--gaia-border);transition:.3s;border-radius:24px}.gaia-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background-color:#fff;transition:.3s;border-radius:50%;box-shadow:0 1px 2px #0003}.gaia-switch-red input:checked+.gaia-slider{background-color:var(--gaia-danger)}.gaia-switch-green input:checked+.gaia-slider{background-color:var(--gaia-success)}.gaia-switch input:checked+.gaia-slider:before{transform:translate(20px)}.gaia-spin{animation:spin 1.5s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.gaia-fade-in{animation:fadeIn .3s ease-out}@keyframes fadeIn{0%{opacity:0}to{opacity:1}}.gaia-error-banner{background-color:#ef44441a;color:var(--gaia-danger);padding:16px;border-radius:8px;margin-bottom:24px;border:1px solid rgba(239,68,68,.2)}.gaia-empty-state{text-align:center;padding:64px;color:var(--gaia-text-sec)}.gaia-empty-state h3{margin:0 0 8px;color:var(--gaia-text)}';class ch extends HTMLElement{constructor(){super(...arguments);nr(this,"_hass");nr(this,"_panel");nr(this,"root",null)}set hass(n){this._hass=n,this.render()}set panel(n){this._panel=n,this.render()}connectedCallback(){if(!this.querySelector("#gaia-dashboard-inline-style")){const n=document.createElement("style");n.id="gaia-dashboard-inline-style",n.textContent=sh,this.appendChild(n)}this.root||(this.root=Gl.createRoot(this)),this.render()}render(){this.root&&this.root.render(g.jsx(ca.StrictMode,{children:g.jsx(ah,{hass:this._hass,panel:this._panel})}))}}customElements.define("gaia-dashboard",ch);
+ */const ih=[["path",{d:"M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z",key:"1xq2db"}]],oh=L("zap",ih),bu={light:g.jsx(zp,{size:18}),switch:g.jsx(Hp,{size:18}),climate:g.jsx(bp,{size:18}),alarm_control_panel:g.jsx(Yp,{size:18}),binary_sensor:g.jsx(qu,{size:18}),button:g.jsx(Fp,{size:18}),calendar:g.jsx(tp,{size:18}),camera:g.jsx(rp,{size:18}),conversation:g.jsx(Op,{size:18}),cover:g.jsx(bd,{size:18}),device_tracker:g.jsx(Mp,{size:18}),event:g.jsx(oh,{size:18}),fan:g.jsx(lh,{size:18}),image:g.jsx(wp,{size:18}),input_boolean:g.jsx(qu,{size:18}),input_datetime:g.jsx(Xu,{size:18}),input_number:g.jsx(Zu,{size:18}),input_select:g.jsx(Ju,{size:18}),lock:g.jsx(_p,{size:18}),media_player:g.jsx($p,{size:18}),number:g.jsx(Zu,{size:18}),person:g.jsx(nh,{size:18}),remote:g.jsx(yp,{size:18}),scene:g.jsx(Jp,{size:18}),script:g.jsx(gp,{size:18}),select:g.jsx(Ju,{size:18}),sensor:g.jsx(Gu,{size:18}),stt:g.jsx(Hi,{size:18}),tts:g.jsx(Hi,{size:18}),time:g.jsx(Xu,{size:18}),todo:g.jsx(ip,{size:18}),update:g.jsx(Tr,{size:18}),vacuum:g.jsx(hc,{size:18}),water_heater:g.jsx(hp,{size:18}),weather:g.jsx(dp,{size:18}),zone:g.jsx(Tp,{size:18}),ai_task:g.jsx(Gu,{size:18}),default:g.jsx(Xp,{size:18})},uh=ca.memo(({entity:e,mode:t,onToggle:n})=>{const r=t==="expose"?!e.exposed:e.exposed,l=t==="expose"?"gaia-switch-red":"gaia-switch-green",i=t==="expose"?"Hidden":"Exposed";return g.jsxs("tr",{className:"gaia-table-row",children:[g.jsx("td",{children:g.jsx("div",{className:"gaia-entity-name",children:e.name})}),g.jsx("td",{children:g.jsxs("span",{className:`gaia-status-badge ${e.exposed?"gaia-status-exposed":"gaia-status-hidden"}`,children:[e.exposed?g.jsx(up,{size:14}):g.jsx(sp,{size:14}),e.exposed?"Exposed":"Hidden"]})}),g.jsx("td",{style:{textAlign:"right"},children:g.jsxs("div",{className:"gaia-switch-wrapper",children:[g.jsx("span",{className:"gaia-switch-label",children:i}),g.jsxs("label",{className:`gaia-switch ${l}`,children:[g.jsx("input",{type:"checkbox",checked:r,onChange:()=>n(e.id,e.exposed)}),g.jsx("span",{className:"gaia-slider"})]})]})})]})});function ah({hass:e,panel:t}){const[n,r]=ee.useState([]),[l,i]=ee.useState("all"),[o,u]=ee.useState(""),[a,c]=ee.useState(!1),[m,h]=ee.useState(null),[p,w]=ee.useState({}),S=async()=>{if(e){c(!0),h(null);try{const x=(await e.connection.sendMessagePromise({type:"gaia/get_entities"})).map(_=>({id:_.entity_id,name:_.name||_.entity_id,domain:_.domain,exposed:_.exposed||!1}));r(x)}catch(v){console.error("Failed to fetch GAIA entities:",v),h("Could not connect to Home Assistant API. Ensure GAIA is running.")}finally{c(!1)}}};ee.useEffect(()=>{e&&n.length===0&&S()},[e]);const E=async(v,x)=>{if(e){r(n.map(_=>_.id===v?{..._,exposed:!x}:_));try{await e.connection.sendMessagePromise({type:"gaia/update_exposure",entity_id:v,expose:!x})}catch(_){console.error("Failed to update exposure:",_),r(n.map(z=>z.id===v?{...z,exposed:x}:z))}}},I=ee.useMemo(()=>{const v={};return n.forEach(x=>v[x.domain]=(v[x.domain]||0)+1),Object.fromEntries(Object.entries(v).sort(([x],[_])=>x.localeCompare(_)))},[n]),f=ee.useMemo(()=>{let v=n;if(l!=="all"&&(v=v.filter(x=>x.domain===l)),o){const x=o.toLowerCase();v=v.filter(_=>_.name.toLowerCase().includes(x))}return v.sort((x,_)=>x.name.localeCompare(_.name))},[n,l,o]),s={total:n.length,exposed:n.filter(v=>v.exposed).length,hidden:n.filter(v=>!v.exposed).length};if(!e)return g.jsxs("div",{className:"gaia-loading-screen",children:[g.jsx(Tr,{size:48,className:"gaia-spin",style:{marginBottom:"16px",opacity:.5}}),g.jsx("h2",{children:"Connecting to Home Assistant API..."})]});const d=p[l]||"hide",y=v=>w(x=>({...x,[l]:v}));return g.jsxs("div",{className:"gaia-app gaia-fade-in",children:[g.jsxs("header",{className:"gaia-header",children:[g.jsxs("div",{className:"gaia-header-title",children:[g.jsx(Hi,{size:28,style:{color:"var(--gaia-primary)"}}),g.jsx("h1",{children:"GAIA Exposure Manager"})]}),g.jsxs("div",{className:"gaia-header-actions",children:[g.jsxs("div",{className:"gaia-search",children:[g.jsx(Wp,{size:18,className:"gaia-search-icon"}),g.jsx("input",{type:"text",placeholder:"Search entities by name...",value:o,onChange:v=>u(v.target.value)})]}),g.jsxs("button",{className:"gaia-btn",onClick:S,disabled:a,children:[g.jsx(Tr,{size:16,className:a?"gaia-spin":""})," Refresh"]})]})]}),g.jsxs("div",{className:"gaia-tabs-container",children:[g.jsxs("button",{className:`gaia-tab ${l==="all"?"active":""}`,onClick:()=>i("all"),children:[g.jsx(Cp,{size:16})," All Entities (",s.total,")"]}),Object.entries(I).map(([v,x])=>g.jsxs("button",{className:`gaia-tab ${l===v?"active":""}`,onClick:()=>i(v),children:[bu[v]||bu.default,g.jsxs("span",{style:{textTransform:"capitalize"},children:[v.replace(/_/g," ")," (",x,")"]})]},v))]}),g.jsxs("main",{className:"gaia-main-area",children:[m&&g.jsxs("div",{className:"gaia-error-banner",children:[g.jsx("strong",{children:"Error: "})," ",m]}),a&&n.length===0?g.jsxs("div",{className:"gaia-empty-state",children:[g.jsx(Tr,{size:48,className:"gaia-spin",style:{opacity:.3,marginBottom:"24px"}}),g.jsx("h3",{children:"Loading your Home Assistant environment..."})]}):f.length===0?g.jsxs("div",{className:"gaia-empty-state",children:[g.jsx(hc,{size:48,style:{opacity:.2,marginBottom:"24px"}}),g.jsx("h3",{children:"No entities found"}),g.jsx("p",{children:"Try adjusting your search criteria or select another tab."})]}):g.jsxs("div",{className:"gaia-card",children:[l!=="all"&&g.jsx("div",{className:"gaia-card-header",children:g.jsxs("div",{className:"gaia-global-switch",children:[g.jsx("span",{className:"gaia-global-label",children:"Global Default View:"}),g.jsxs("div",{className:"gaia-segment-control",children:[g.jsx("button",{className:`gaia-segment-btn ${d==="hide"?"active-hide":""}`,onClick:()=>y("hide"),children:"Hide"}),g.jsx("button",{className:`gaia-segment-btn ${d==="expose"?"active-expose":""}`,onClick:()=>y("expose"),children:"Expose"})]}),g.jsx("p",{className:"gaia-global-desc",children:d==="hide"?"Entities are Hidden by default. Use switches to Expose them (Green).":"Entities are Exposed by default. Use switches to explicitly Hide them (Red)."})]})}),g.jsx("div",{className:"gaia-table-container",children:g.jsxs("table",{className:"gaia-table",children:[g.jsx("thead",{children:g.jsxs("tr",{children:[g.jsx("th",{children:"Entity Name"}),g.jsx("th",{children:"Current Status"}),g.jsx("th",{style:{textAlign:"right"},children:"Toggle Action"})]})}),g.jsx("tbody",{children:f.map(v=>g.jsx(uh,{entity:v,mode:l==="all"?"hide":d,onToggle:E},v.id))})]})})]})]})]})}const sh=`
+:root {
+    --gaia-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --gaia-primary: var(--primary-color, #03a9f4);
+    --gaia-success: var(--success-color, #10b981);
+    --gaia-danger: var(--error-color, #ef4444);
+    --gaia-text: var(--primary-text-color, #1f2937);
+    --gaia-text-sec: var(--secondary-text-color, #6b7280);
+    --gaia-bg: #f9fafb;
+    --gaia-card-bg: #ffffff;
+    --gaia-border: #e5e7eb;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --gaia-text: var(--primary-text-color, #f9fafb);
+        --gaia-text-sec: var(--secondary-text-color, #9ca3af);
+        --gaia-bg: #111827;
+        --gaia-card-bg: #1f2937;
+        --gaia-border: #374151;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.gaia-loading-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    color: var(--gaia-text);
+    font-family: var(--gaia-font);
+}
+
+.gaia-app {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 56px);
+    background-color: var(--gaia-bg);
+    color: var(--gaia-text);
+    font-family: var(--gaia-font);
+}
+
+.gaia-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 32px;
+    background-color: var(--gaia-card-bg);
+}
+
+.gaia-header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.gaia-header-title h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gaia-text);
+    letter-spacing: -0.5px;
+}
+
+.gaia-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.gaia-search {
+    display: flex;
+    align-items: center;
+    background: var(--gaia-bg);
+    border: 1px solid var(--gaia-border);
+    border-radius: 8px;
+    padding: 0 12px;
+    width: 280px;
+}
+
+.gaia-search input {
+    border: none;
+    background: transparent;
+    padding: 10px;
+    width: 100%;
+    color: var(--gaia-text);
+    outline: none;
+    font-family: var(--gaia-font);
+}
+
+.gaia-search-icon {
+    color: var(--gaia-text-sec);
+}
+
+.gaia-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--gaia-border);
+    background: var(--gaia-card-bg);
+    color: var(--gaia-text);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+    font-family: var(--gaia-font);
+}
+
+.gaia-btn:hover {
+    background: var(--gaia-bg);
+}
+
+/* Horizontal Tabs Menu */
+.gaia-tabs-container {
+    display: flex;
+    gap: 8px;
+    padding: 0 32px;
+    background-color: var(--gaia-card-bg);
+    border-bottom: 1px solid var(--gaia-border);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.gaia-tabs-container::-webkit-scrollbar {
+    display: none;
+}
+
+.gaia-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 4px;
+    margin-right: 24px;
+    border: none;
+    background: none;
+    color: var(--gaia-text-sec);
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    font-family: var(--gaia-font);
+    white-space: nowrap;
+}
+
+.gaia-tab:hover {
+    color: var(--gaia-text);
+}
+
+.gaia-tab.active {
+    color: var(--gaia-primary);
+    border-bottom: 2px solid var(--gaia-primary);
+    font-weight: 600;
+}
+
+.gaia-tab-badge {
+    background: var(--gaia-border);
+    color: var(--gaia-text-sec);
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.gaia-tab.active .gaia-tab-badge {
+    background: rgba(3, 169, 244, 0.1);
+    color: var(--gaia-primary);
+}
+
+.gaia-main-area {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+}
+
+.gaia-card {
+    background: var(--gaia-card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--gaia-border);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Global Mode Switch */
+.gaia-card-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--gaia-border);
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.gaia-global-switch {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.gaia-global-label {
+    font-weight: 600;
+    color: var(--gaia-text);
+}
+
+.gaia-segment-control {
+    display: flex;
+    background: var(--gaia-bg);
+    border-radius: 8px;
+    padding: 4px;
+    border: 1px solid var(--gaia-border);
+}
+
+.gaia-segment-btn {
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--gaia-text-sec);
+    cursor: pointer;
+    font-weight: 600;
+    font-family: var(--gaia-font);
+    transition: all 0.2s;
+}
+
+.gaia-segment-btn.active-hide {
+    background: var(--gaia-card-bg);
+    color: var(--gaia-text);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.gaia-segment-btn.active-expose {
+    background: var(--gaia-card-bg);
+    color: var(--gaia-text);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.gaia-global-desc {
+    margin: 0 0 0 auto;
+    font-size: 0.85rem;
+    color: var(--gaia-text-sec);
+}
+
+.gaia-table-container {
+    overflow-x: auto;
+    content-visibility: auto;
+    contain-intrinsic-size: 500px;
+}
+
+.gaia-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.gaia-table th {
+    text-align: left;
+    padding: 12px 24px;
+    color: var(--gaia-text-sec);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--gaia-border);
+}
+
+.gaia-table td {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--gaia-border);
+    vertical-align: middle;
+}
+
+.gaia-table tr:hover td {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.gaia-entity-name {
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.gaia-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.gaia-status-exposed {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--gaia-success);
+}
+
+.gaia-status-hidden {
+    background: rgba(107, 114, 128, 0.1);
+    color: var(--gaia-text-sec);
+}
+
+/* Switches */
+.gaia-switch-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.gaia-switch-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gaia-text-sec);
+}
+
+.gaia-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.gaia-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.gaia-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--gaia-border);
+    transition: .3s;
+    border-radius: 24px;
+}
+
+.gaia-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.gaia-switch-red input:checked+.gaia-slider {
+    background-color: var(--gaia-danger);
+}
+
+.gaia-switch-green input:checked+.gaia-slider {
+    background-color: var(--gaia-success);
+}
+
+.gaia-switch input:checked+.gaia-slider:before {
+    transform: translateX(20px);
+}
+
+.gaia-spin {
+    animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.gaia-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.gaia-error-banner {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--gaia-danger);
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.gaia-empty-state {
+    text-align: center;
+    padding: 64px;
+    color: var(--gaia-text-sec);
+}
+
+.gaia-empty-state h3 {
+    margin: 0 0 8px 0;
+    color: var(--gaia-text);
+}
+`;class ch extends HTMLElement{constructor(){super(...arguments);nr(this,"_hass");nr(this,"_panel");nr(this,"root",null)}set hass(n){this._hass=n,this.render()}set panel(n){this._panel=n,this.render()}connectedCallback(){if(!this.querySelector("#gaia-dashboard-inline-style")){const n=document.createElement("style");n.id="gaia-dashboard-inline-style",n.textContent=sh,this.appendChild(n)}this.root||(this.root=Gl.createRoot(this)),this.render()}render(){this.root&&this.root.render(g.jsx(ca.StrictMode,{children:g.jsx(ah,{hass:this._hass,panel:this._panel})}))}}customElements.define("gaia-dashboard",ch);

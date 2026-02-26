@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
-import styles from './index.css?inline'
+import { styles } from './styles';
 
 class GaiaDashboard extends HTMLElement {
     private _hass: any;
