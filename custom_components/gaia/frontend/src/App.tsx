@@ -211,6 +211,7 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                 domain: activeTab,
                 expose: mode === 'expose'
             });
+            fetchEntities(); // Refetch the true YAML stat
         } catch (err) {
             console.error('Failed to update domain exposure:', err);
             setDomainModes(prev => ({ ...prev, [activeTab]: previousMode }));
