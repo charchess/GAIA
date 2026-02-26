@@ -59,22 +59,31 @@ def read_config_from_yaml(filepath: str) -> tuple[dict, list, bool]:
         # We manually parse exposed_domains to accurately capture commented fields
         # yaml.safe_load drops comments so we wouldn't see "# - light"
         exposed_domains = []
-        in_exposed_domains = False
+        exposed_domains_indent = 0
         
         for line in lines:
             stripped = line.strip()
+            
             if stripped.startswith('exposed_domains:'):
                 in_exposed_domains = True
+                exposed_domains_indent = len(line) - len(line.lstrip())
                 continue
+                
             if in_exposed_domains:
-                if stripped and not stripped.startswith('-') and not stripped.startswith('#') and not stripped.startswith('exposed_domains:'):
-                    if not line.lstrip().startswith('-') and not line.lstrip().startswith('#'):
-                         # We've left the list
-                         in_exposed_domains = False
-                         
+                if not stripped:
+                    continue
+                    
+                current_indent = len(line) - len(line.lstrip())
+                
+                # Check if we've exited the exposed_domains block
+                # A block ends if we hit a non-empty, non-commented line with equal or lesser indent, that isn't a list item
+                if current_indent <= exposed_domains_indent and not stripped.startswith('-') and not stripped.startswith('#'):
+                    in_exposed_domains = False
+                    continue
+                    
                 # Check for active domain "- light"
                 match = re.match(r'^\s*-\s*\"?([a-zA-Z0-9_]+)\"?\s*$', line)
-                if match and in_exposed_domains:
+                if match:
                     exposed_domains.append(match.group(1))
                     
         # Now use safe_load for the rest
@@ -105,6 +114,7 @@ def update_yaml_domain_exposure(filepath: str, domain: str, should_expose: bool)
         in_ga = False
         in_exposed_domains = False
         exposed_domains_idx = -1
+        exposed_domains_indent = 0
         
         domain_idx = -1
         domain_indent = ""
@@ -120,12 +130,18 @@ def update_yaml_domain_exposure(filepath: str, domain: str, should_expose: bool)
             if stripped.startswith('exposed_domains:'):
                 in_exposed_domains = True
                 exposed_domains_idx = i
+                exposed_domains_indent = len(line) - len(line.lstrip())
                 continue
                 
             if in_exposed_domains:
-                if stripped and not stripped.startswith('-') and not stripped.startswith('#') and not stripped.startswith('exposed_domains:'):
-                    if not line.lstrip().startswith('-') and not line.lstrip().startswith('#'):
-                         in_exposed_domains = False
+                if not stripped:
+                    continue
+                    
+                current_indent = len(line) - len(line.lstrip())
+                
+                if current_indent <= exposed_domains_indent and not stripped.startswith('-') and not stripped.startswith('#'):
+                    in_exposed_domains = False
+                    continue
                 
                 # Match `- light` or `- "light"` capturing leading spaces
                 match_active = re.match(r'^(\s*)-\s*(\"?'+ domain + r'\"?)\s*$', line)
@@ -135,13 +151,11 @@ def update_yaml_domain_exposure(filepath: str, domain: str, should_expose: bool)
                     domain_idx = i
                     is_commented = False
                     domain_indent = match_active.group(1)
-                    in_exposed_domains = False
                     break
                 elif match_commented:
                     domain_idx = i
                     is_commented = True
                     domain_indent = match_commented.group(1)
-                    in_exposed_domains = False
                     break
                     
         if domain_idx != -1:
@@ -370,3 +384,4 @@ def ws_update_domain_exposure(hass: HomeAssistant, connection: websocket_api.Act
          hass.async_create_task(hass.services.async_call("google_assistant", "reload", blocking=False))
             
     connection.send_result(msg["id"], {"success": success, "domain": domain, "exposed": should_expose})
+
