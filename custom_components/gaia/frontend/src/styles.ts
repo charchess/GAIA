@@ -314,12 +314,10 @@ export const styles = `
     display: inline-block;
     width: 44px;
     height: 24px;
-}
-
-.gaia-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    outline: none;
 }
 
 .gaia-slider {
@@ -347,15 +345,15 @@ export const styles = `
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.gaia-switch-red input:checked+.gaia-slider {
+.gaia-switch.gaia-switch-red.checked .gaia-slider {
     background-color: var(--gaia-danger);
 }
 
-.gaia-switch-green input:checked+.gaia-slider {
+.gaia-switch.gaia-switch-green.checked .gaia-slider {
     background-color: var(--gaia-success);
 }
 
-.gaia-switch input:checked+.gaia-slider:before {
+.gaia-switch.checked .gaia-slider:before {
     transform: translateX(20px);
 }
 

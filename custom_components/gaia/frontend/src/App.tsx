@@ -52,14 +52,13 @@ const EntityRow = React.memo(({ entity, mode, onToggle }: { entity: GaiaEntity, 
             <td style={{ textAlign: 'right' }}>
                 <div className="gaia-switch-wrapper">
                     <span className="gaia-switch-label">{actionLabel}</span>
-                    <label className={`gaia-switch ${switchClass}`}>
-                        <input
-                            type="checkbox"
-                            checked={isSwitchOn}
-                            onChange={() => onToggle(entity.id, entity.exposed)}
-                        />
+                    <button
+                        type="button"
+                        className={`gaia-switch ${switchClass} ${isSwitchOn ? 'checked' : ''}`}
+                        onClick={() => onToggle(entity.id, entity.exposed)}
+                    >
                         <span className="gaia-slider"></span>
-                    </label>
+                    </button>
                 </div>
             </td>
         </tr>
