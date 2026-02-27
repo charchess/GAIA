@@ -105,7 +105,7 @@ The `<<: !include` merge syntax imports the contents of `google_assistant.yaml` 
   - Grey = follows domain default
   - Red = forced hidden (on an exposed domain)
   - Green = forced exposed (on a hidden domain)
-- **Smart Inversion** — When you flip a domain, entity exceptions are automatically inverted to preserve your intent
+- **Exception Persistence** — When you flip a domain toggle, entity exceptions are automatically preserved: an entity that was "different from the domain" stays "different from the domain", just in the opposite direction. Flipping back restores the original state.
 - **Batch Save** — All changes are staged locally and written in a single operation
 - **Reset** — Discard all unsaved changes with one click
 - **Entity Control** — Click any entity name to open its Home Assistant control dialog
@@ -114,13 +114,18 @@ The `<<: !include` merge syntax imports the contents of `google_assistant.yaml` 
 - **Dark Mode** — Automatic, follows your system preference
 - **YAML-Safe** — Comments, formatting, and `!include`/`!secret` tags are preserved
 
+## Important: Restart Required
+
+GAIA writes changes to `google_assistant.yaml`, but **Home Assistant only reads this file at startup**. After saving changes in GAIA, you must **restart Home Assistant** (or reload the Google Assistant integration) for the new exposure settings to take effect.
+
+This is a fundamental limitation of how HA handles YAML configuration — not a GAIA limitation.
+
 ## Limitations
 
 - GAIA **only reads and writes `google_assistant.yaml`**. It never modifies `configuration.yaml`.
 - GAIA **cannot create the `exposed_domains:` block** if it's missing from the YAML file. You must provide at least the skeleton shown above.
 - If `google_assistant.yaml` doesn't exist, GAIA falls back to looking for config in `configuration.yaml` directly — this works but is not recommended.
 - GAIA **does not sync with Google**. It configures which entities HA *offers* to Google Assistant. The actual sync is handled by the official `google_assistant` integration.
-- After saving changes in GAIA, you may need to **restart HA or reload the integration** for Google to pick up the new exposure settings.
 
 ## Disclaimer
 
@@ -133,6 +138,16 @@ The `<<: !include` merge syntax imports the contents of `google_assistant.yaml` 
 > - The authors and contributors — human or artificial — accept **no liability** for any damage, data loss, or misconfiguration caused by this software.
 >
 > By using GAIA, you acknowledge these risks and accept full responsibility.
+
+## Roadmap
+
+Ideas under consideration (no timeline, no guarantees):
+
+- **Auto-create `google_assistant.yaml`** — Generate the YAML file automatically if it doesn't exist
+- **Guided manual setup** — Step-by-step wizard to help configure the `google_assistant:` integration in HA
+- **Area/room display** — Show entity areas in debug mode (HA already exposes this data via its registry)
+- **Area sync to Google** — Push HA area information to Google Assistant to improve room assignment in the Google Home app
+- **Installation integration** — Streamlined setup flow within Home Assistant's UI
 
 ## License
 
