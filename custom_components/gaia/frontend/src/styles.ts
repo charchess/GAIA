@@ -507,11 +507,11 @@ export const styles = `
 
 /* Entity Overrides */
 .gaia-slim-switch.overridden.override-exposed {
-    background-color: var(--gaia-success);
+    background-color: var(--gaia-success) !important;
 }
 
 .gaia-slim-switch.overridden.override-hidden {
-    background-color: var(--gaia-danger);
+    background-color: var(--gaia-danger) !important;
 }
 
 .gaia-slim-switch.overridden .slider-thumb {
@@ -520,11 +520,11 @@ export const styles = `
 
 /* Domain Global Switch Colors */
 .gaia-domain-switch {
-    background-color: var(--gaia-danger); /* Base Domain is Red when hidden */
+    background-color: var(--gaia-danger) !important; /* Base Domain is Red when hidden */
 }
 
 .gaia-domain-switch.overridden.override-exposed {
-    background-color: var(--gaia-success); /* Base Domain is Green when exposed */
+    background-color: var(--gaia-success) !important; /* Base Domain is Green when exposed */
 }
 
 @media (prefers-color-scheme: dark) {
