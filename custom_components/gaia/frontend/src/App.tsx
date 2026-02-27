@@ -48,37 +48,36 @@ const EntityCard = React.memo(({
     onToggle: (id: string, state: 'exposed' | 'hidden' | 'default') => void
 }) => {
 
-    // Determine effective override state
-    let isOverridden = entity.yaml_has_override;
-    let isOverrideExposed = entity.yaml_has_override ? (entity.override_value === true) : !isDomainExposed;
-    let isCurrentlyExposed = isOverridden ? entity.override_value : isDomainExposed;
+    // Option C: entity toggle = "exception" (opposite of domain) or "default" (follows domain)
+    // Determine effective override value
+    let effectiveValue: boolean | null = null;
+    if (pendingOverride === 'exposed') effectiveValue = true;
+    else if (pendingOverride === 'hidden') effectiveValue = false;
+    else if (pendingOverride === 'default') effectiveValue = null;
+    else if (entity.yaml_has_override) effectiveValue = entity.override_value ?? null;
 
-    // Apply pending override on top
-    if (pendingOverride) {
-        if (pendingOverride === 'default') {
-            isOverridden = false;
-            isOverrideExposed = !isDomainExposed;
-            isCurrentlyExposed = isDomainExposed;
-        } else {
-            isOverridden = true;
-            isOverrideExposed = pendingOverride === 'exposed';
-            isCurrentlyExposed = pendingOverride === 'exposed';
-        }
-    }
-
-    // If override matches domain default, it's redundant — treat as default
-    if (isOverridden && isCurrentlyExposed === isDomainExposed) {
-        isOverridden = false;
-        isOverrideExposed = !isDomainExposed;
-        isCurrentlyExposed = isDomainExposed;
-    }
+    // Exception = override that differs from domain default
+    const isException = effectiveValue !== null && effectiveValue !== isDomainExposed;
+    const isCurrentlyExposed = isException ? effectiveValue! : isDomainExposed;
 
     const handleToggle = () => {
-        if (isOverridden) {
+        if (isException) {
             onToggle(entity.id, 'default');
         } else {
-            onToggle(entity.id, isOverrideExposed ? 'exposed' : 'hidden');
+            // Create exception: opposite of domain
+            onToggle(entity.id, isDomainExposed ? 'hidden' : 'exposed');
         }
+    };
+
+    // Open HA more-info dialog for this entity
+    const openEntityDialog = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const event = new CustomEvent('hass-more-info', {
+            detail: { entityId: entity.id },
+            bubbles: true,
+            composed: true
+        });
+        (e.target as HTMLElement).dispatchEvent(event);
     };
 
     return (
@@ -87,7 +86,9 @@ const EntityCard = React.memo(({
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, paddingRight: '12px' }}>
                     <div>
-                        <div className="gaia-entity-name">{entity.name}</div>
+                        <div className="gaia-entity-name gaia-entity-link" onClick={openEntityDialog} title="Open entity controls">
+                            {entity.name}
+                        </div>
                         {showDebug && (
                             <div className="gaia-entity-debug">{entity.id}</div>
                         )}
@@ -108,12 +109,12 @@ const EntityCard = React.memo(({
 
                 <button
                     type="button"
-                    className={`gaia-slim-switch ${isOverridden ? 'overridden' : ''} ${isOverrideExposed ? 'override-exposed' : 'override-hidden'}`}
+                    className={`gaia-slim-switch ${isException ? 'overridden' : ''} ${isException ? (isCurrentlyExposed ? 'override-exposed' : 'override-hidden') : ''}`}
                     onClick={handleToggle}
-                    title={isOverridden ? 'Return to Default' : 'Override Domain'}
+                    title={isException ? 'Return to Default' : 'Make Exception'}
                 >
                     <span className="gaia-toggle-text">
-                        {isOverridden ? (isOverrideExposed ? 'Exposed' : 'Hidden') : 'Default'}
+                        {isException ? (isCurrentlyExposed ? 'Exposed' : 'Hidden') : 'Default'}
                     </span>
                     <div className="slider-thumb"></div>
                 </button>
@@ -241,9 +242,11 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
 
     const setDomainMode = async (domain: string, targetMode: 'expose' | 'hide') => {
         const currentYamlMode = domainModes[domain] || 'hide';
+        const oldDomainExposed = effectiveDomainModes[domain] === 'expose';
         const newDomainExposed = targetMode === 'expose';
         setPendingOverrides(prev => {
             const next = { ...prev };
+
             // Set domain override
             if (targetMode === currentYamlMode) {
                 delete next[domain];
@@ -251,22 +254,43 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                 next[domain] = targetMode === 'expose' ? 'exposed' : 'hidden';
             }
 
-            // Clear entity overrides that become redundant with new domain default
-            entities.filter(e => e.domain === domain).forEach(entity => {
-                const pending = next[entity.id];
-                if (pending && pending !== 'default') {
-                    // Pending override matches new domain default → redundant
-                    if ((pending === 'exposed' && newDomainExposed) ||
-                        (pending === 'hidden' && !newDomainExposed)) {
-                        delete next[entity.id];
+            // Option C: preserve exception status across domain flip
+            if (oldDomainExposed !== newDomainExposed) {
+                entities.filter(e => e.domain === domain).forEach(entity => {
+                    const pending = prev[entity.id];
+
+                    if (pending === 'exposed') {
+                        // Invert pending: exposed → hidden
+                        // If YAML already has hidden, no pending needed
+                        if (entity.yaml_has_override && entity.override_value === false) {
+                            delete next[entity.id];
+                        } else {
+                            next[entity.id] = 'hidden';
+                        }
+                    } else if (pending === 'hidden') {
+                        // Invert pending: hidden → exposed
+                        if (entity.yaml_has_override && entity.override_value === true) {
+                            delete next[entity.id];
+                        } else {
+                            next[entity.id] = 'exposed';
+                        }
+                    } else if (pending === 'default') {
+                        // User explicitly cleared — keep as default
+                    } else if (entity.yaml_has_override) {
+                        // No pending change — check if YAML override was an exception
+                        const wasException = entity.override_value !== oldDomainExposed;
+                        if (wasException) {
+                            // Invert to keep as exception on new domain
+                            next[entity.id] = newDomainExposed ? 'hidden' : 'exposed';
+                        } else {
+                            // Was redundant (same as old domain) — now opposite = exception
+                            // But user saw it as "default", so clear it
+                            next[entity.id] = 'default';
+                        }
                     }
-                } else if (!pending && entity.yaml_has_override) {
-                    // YAML override matches new domain default → mark for clearing
-                    if (entity.override_value === newDomainExposed) {
-                        next[entity.id] = 'default';
-                    }
-                }
-            });
+                    // No YAML override, no pending → follows domain, nothing to do
+                });
+            }
 
             return next;
         });

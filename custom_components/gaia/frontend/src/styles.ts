@@ -296,6 +296,15 @@ export const styles = `
     transition: color 0.2s;
 }
 
+.gaia-entity-link {
+    cursor: pointer;
+}
+
+.gaia-entity-link:hover {
+    color: var(--gaia-primary);
+    text-decoration: underline;
+}
+
 .gaia-entity-unsaved .gaia-entity-name {
     font-weight: 800;
     color: var(--gaia-primary);
