@@ -6,7 +6,7 @@
 
 ## Why GAIA Exists
 
-[Nabu Casa](https://www.nabucasa.com/) is an excellent service. It funds Home Assistant development, it simplifies setup, and it gives you a beautiful UI to manage which entities are exposed to Google Assistant. **If you can afford it, subscribe** — it's worth every cent and supports the project we all depend on.
+[Nabu Casa](https://www.nabucasa.com/) is an excellent service — and far more than just a Google Assistant bridge. It gives you secure remote access, encrypted cloud backups, Alexa integration, high-quality text-to-speech and speech-to-text, cloud-powered Assist voice processing, improved WebRTC camera streaming, and a beautiful UI for managing entity exposure. Most importantly, **it directly funds the full-time developers** of Home Assistant, ESPHome, and the Open Home Foundation. If you can afford it, **subscribe** — it's worth every cent and supports the open-source ecosystem we all depend on.
 
 But sometimes in life, every euro counts. And if you've chosen the manual `google_assistant:` setup to avoid the subscription, you've discovered the trade-off: **Home Assistant completely disables the exposure UI**.
 
