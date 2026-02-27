@@ -48,19 +48,29 @@ const EntityCard = React.memo(({
     onToggle: (id: string, state: 'exposed' | 'hidden' | 'default') => void
 }) => {
 
+    // Determine effective override state
     let isOverridden = entity.yaml_has_override;
-    let isOverrideExposed = !isDomainExposed;
+    let isOverrideExposed = entity.yaml_has_override ? (entity.override_value === true) : !isDomainExposed;
     let isCurrentlyExposed = isOverridden ? entity.override_value : isDomainExposed;
 
+    // Apply pending override on top
     if (pendingOverride) {
         if (pendingOverride === 'default') {
             isOverridden = false;
+            isOverrideExposed = !isDomainExposed;
             isCurrentlyExposed = isDomainExposed;
         } else {
             isOverridden = true;
             isOverrideExposed = pendingOverride === 'exposed';
             isCurrentlyExposed = pendingOverride === 'exposed';
         }
+    }
+
+    // If override matches domain default, it's redundant — treat as default
+    if (isOverridden && isCurrentlyExposed === isDomainExposed) {
+        isOverridden = false;
+        isOverrideExposed = !isDomainExposed;
+        isCurrentlyExposed = isDomainExposed;
     }
 
     const handleToggle = () => {
@@ -231,13 +241,33 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
 
     const setDomainMode = async (domain: string, targetMode: 'expose' | 'hide') => {
         const currentYamlMode = domainModes[domain] || 'hide';
+        const newDomainExposed = targetMode === 'expose';
         setPendingOverrides(prev => {
             const next = { ...prev };
+            // Set domain override
             if (targetMode === currentYamlMode) {
                 delete next[domain];
             } else {
                 next[domain] = targetMode === 'expose' ? 'exposed' : 'hidden';
             }
+
+            // Clear entity overrides that become redundant with new domain default
+            entities.filter(e => e.domain === domain).forEach(entity => {
+                const pending = next[entity.id];
+                if (pending && pending !== 'default') {
+                    // Pending override matches new domain default → redundant
+                    if ((pending === 'exposed' && newDomainExposed) ||
+                        (pending === 'hidden' && !newDomainExposed)) {
+                        delete next[entity.id];
+                    }
+                } else if (!pending && entity.yaml_has_override) {
+                    // YAML override matches new domain default → mark for clearing
+                    if (entity.override_value === newDomainExposed) {
+                        next[entity.id] = 'default';
+                    }
+                }
+            });
+
             return next;
         });
     };
@@ -329,12 +359,6 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                                     <div key={domain} className="gaia-accordion">
                                         <div className={`gaia-accordion-header ${hasPendingDomainOverride ? 'gaia-accordion-unsaved' : ''}`} onClick={() => toggleAccordion(domain)}>
                                             <div className="gaia-accordion-title">
-                                                <span>
-                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                                                        style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', color: 'var(--gaia-text-sec)' }}>
-                                                        <polyline points="9 18 15 12 9 6"></polyline>
-                                                    </svg>
-                                                </span>
                                                 {DOMAIN_ICONS[domain] || DOMAIN_ICONS.default}
                                                 {domain.replace(/_/g, ' ')}
                                                 <span className="gaia-accordion-count">{domainEntities.length}</span>
