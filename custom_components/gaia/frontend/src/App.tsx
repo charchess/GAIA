@@ -342,7 +342,7 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                                             <div className="gaia-accordion-actions" onClick={e => e.stopPropagation()}>
                                                 <button
                                                     type="button"
-                                                    className={`gaia-slim-switch gaia-domain-switch ${currentMode === 'expose' ? 'overridden override-exposed' : 'override-hidden'}`}
+                                                    className={`gaia-slim-switch gaia-domain-switch ${currentMode === 'expose' ? 'domain-exposed' : 'domain-hidden'}`}
                                                     onClick={() => setDomainMode(domain, currentMode === 'hide' ? 'expose' : 'hide')}
                                                     title={`Toggle default exposure for all ${domain} entities`}
                                                 >

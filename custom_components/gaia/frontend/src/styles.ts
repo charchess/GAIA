@@ -344,7 +344,7 @@ export const styles = `
     max-height: 32px !important;
     border-radius: 16px !important;
     border: none !important;
-    background-color: var(--gaia-border) !important;
+    background-color: #9ca3af !important;
     cursor: pointer !important;
     padding: 0 !important;
     margin: 0 !important;
@@ -402,11 +402,11 @@ export const styles = `
 
 /* Entity Override Colors */
 .gaia-app button.gaia-slim-switch.gaia-slim-switch.overridden.override-exposed {
-    background-color: var(--gaia-success) !important;
+    background-color: #10b981 !important;
 }
 
 .gaia-app button.gaia-slim-switch.gaia-slim-switch.overridden.override-hidden {
-    background-color: var(--gaia-danger) !important;
+    background-color: #ef4444 !important;
 }
 
 /* ===== Domain Toggle ===== */
@@ -419,7 +419,7 @@ export const styles = `
     min-height: 34px !important;
     max-height: 34px !important;
     border-radius: 17px !important;
-    background-color: var(--gaia-danger) !important;
+    background-color: #ef4444 !important;
 }
 
 .gaia-app button.gaia-domain-switch.gaia-domain-switch .slider-thumb {
@@ -434,12 +434,24 @@ export const styles = `
     font-size: 11px !important;
 }
 
-.gaia-app button.gaia-domain-switch.gaia-domain-switch.overridden.override-exposed {
-    background-color: var(--gaia-success) !important;
+/* Domain exposed = green, thumb right */
+.gaia-app button.gaia-domain-switch.gaia-domain-switch.domain-exposed {
+    background-color: #10b981 !important;
 }
 
-.gaia-app button.gaia-domain-switch.gaia-domain-switch.overridden .slider-thumb {
+.gaia-app button.gaia-domain-switch.gaia-domain-switch.domain-exposed .slider-thumb {
     transform: translateX(76px) !important;
+}
+
+.gaia-app button.gaia-domain-switch.gaia-domain-switch.domain-exposed .gaia-toggle-text {
+    left: 9px !important;
+    right: auto !important;
+}
+
+/* Domain hidden = red, thumb left (default position) */
+.gaia-app button.gaia-domain-switch.gaia-domain-switch.domain-hidden .gaia-toggle-text {
+    right: 10px !important;
+    left: auto !important;
 }
 
 /* Dark mode thumb */
