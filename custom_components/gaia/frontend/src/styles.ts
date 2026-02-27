@@ -332,14 +332,16 @@ export const styles = `
 /* ===== Toggle Switches ===== */
 
 /* Base Slim Switch (entity + domain) */
-.gaia-slim-switch {
+.gaia-app button.gaia-slim-switch.gaia-slim-switch {
     position: relative !important;
     display: inline-flex !important;
     align-items: center !important;
     width: 100px !important;
     min-width: 100px !important;
+    max-width: 100px !important;
     height: 32px !important;
     min-height: 32px !important;
+    max-height: 32px !important;
     border-radius: 16px !important;
     border: none !important;
     background-color: var(--gaia-border) !important;
@@ -352,10 +354,11 @@ export const styles = `
     flex-shrink: 0;
     -webkit-appearance: none !important;
     appearance: none !important;
+    line-height: 32px !important;
 }
 
 /* Thumb */
-.gaia-slim-switch .slider-thumb {
+.gaia-app button.gaia-slim-switch.gaia-slim-switch .slider-thumb {
     position: absolute !important;
     top: 3px !important;
     left: 3px !important;
@@ -369,7 +372,7 @@ export const styles = `
 }
 
 /* Text inside toggle */
-.gaia-slim-switch .gaia-toggle-text {
+.gaia-app button.gaia-slim-switch.gaia-slim-switch .gaia-toggle-text {
     position: absolute !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
@@ -387,59 +390,61 @@ export const styles = `
 }
 
 /* Overridden (thumb right): text on left */
-.gaia-slim-switch.overridden .slider-thumb {
+.gaia-app button.gaia-slim-switch.gaia-slim-switch.overridden .slider-thumb {
     transform: translateX(68px) !important;
 }
 
-.gaia-slim-switch.overridden .gaia-toggle-text {
+.gaia-app button.gaia-slim-switch.gaia-slim-switch.overridden .gaia-toggle-text {
     left: 9px !important;
     right: auto !important;
     color: white !important;
 }
 
 /* Entity Override Colors */
-.gaia-slim-switch.overridden.override-exposed {
+.gaia-app button.gaia-slim-switch.gaia-slim-switch.overridden.override-exposed {
     background-color: var(--gaia-success) !important;
 }
 
-.gaia-slim-switch.overridden.override-hidden {
+.gaia-app button.gaia-slim-switch.gaia-slim-switch.overridden.override-hidden {
     background-color: var(--gaia-danger) !important;
 }
 
 /* ===== Domain Toggle ===== */
 /* Wider, always colored: red=hidden, green=exposed */
-.gaia-domain-switch {
+.gaia-app button.gaia-domain-switch.gaia-domain-switch {
     width: 110px !important;
     min-width: 110px !important;
+    max-width: 110px !important;
     height: 34px !important;
     min-height: 34px !important;
+    max-height: 34px !important;
     border-radius: 17px !important;
     background-color: var(--gaia-danger) !important;
 }
 
-.gaia-domain-switch .slider-thumb {
+.gaia-app button.gaia-domain-switch.gaia-domain-switch .slider-thumb {
     top: 4px !important;
     left: 4px !important;
     width: 26px !important;
     height: 26px !important;
 }
 
-.gaia-domain-switch .gaia-toggle-text {
+.gaia-app button.gaia-domain-switch.gaia-domain-switch .gaia-toggle-text {
     color: white !important;
     font-size: 11px !important;
 }
 
-.gaia-domain-switch.overridden.override-exposed {
+.gaia-app button.gaia-domain-switch.gaia-domain-switch.overridden.override-exposed {
     background-color: var(--gaia-success) !important;
 }
 
-.gaia-domain-switch.overridden .slider-thumb {
+.gaia-app button.gaia-domain-switch.gaia-domain-switch.overridden .slider-thumb {
     transform: translateX(76px) !important;
 }
 
 /* Dark mode thumb */
 @media (prefers-color-scheme: dark) {
-    .gaia-slim-switch .slider-thumb {
+    .gaia-app button.gaia-slim-switch.gaia-slim-switch .slider-thumb {
         background-color: #d1d5db !important;
     }
 }
