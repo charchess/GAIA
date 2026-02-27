@@ -296,8 +296,6 @@ Error generating stack: `+i.message+`
 
 .gaia-table-container {
     overflow-x: auto;
-    content-visibility: auto;
-    contain-intrinsic-size: 500px;
 }
 
 .gaia-table {
