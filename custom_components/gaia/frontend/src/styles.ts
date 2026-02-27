@@ -118,26 +118,32 @@ export const styles = `
 /* Horizontal Tabs Menu */
 .gaia-tabs-container {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 8px;
-    padding: 16px 32px 0 32px;
+    padding: 12px 32px 12px 32px;
     background-color: var(--gaia-card-bg);
     border-bottom: 1px solid var(--gaia-border);
+    overflow-x: auto;
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+.gaia-tabs-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
 }
 
 .gaia-tab {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 4px 16px 4px;
-    margin-right: 24px;
-    border: none;
-    background: none;
+    padding: 6px 14px;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    background: transparent;
     color: var(--gaia-text-sec);
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     cursor: pointer;
-    border-bottom: 2px solid transparent;
     transition: all 0.2s;
     font-family: var(--gaia-font);
     white-space: nowrap;
@@ -145,11 +151,13 @@ export const styles = `
 
 .gaia-tab:hover {
     color: var(--gaia-text);
+    background: var(--gaia-bg);
 }
 
 .gaia-tab.active {
     color: var(--gaia-primary);
-    border-bottom: 2px solid var(--gaia-primary);
+    background: rgba(3, 169, 244, 0.1); /* Fallback tint, overridden if ha-primary-color exists */
+    border-color: rgba(3, 169, 244, 0.2);
     font-weight: 600;
 }
 
@@ -167,15 +175,15 @@ export const styles = `
 }
 
 /* Epic 4: Domain Tab Alert Colors */
-.gaia-tab.tab-red { border-bottom: 2px solid #ef5350; color: #ef5350; }
-.gaia-tab.tab-orange { border-bottom: 2px solid #ff9800; color: #ff9800; }
-.gaia-tab.tab-lightgreen { border-bottom: 2px solid #81c784; color: #81c784; }
-.gaia-tab.tab-darkgreen { border-bottom: 2px solid #4CAF50; color: #4CAF50; }
+.gaia-tab.tab-red { border-color: rgba(239, 83, 80, 0.3); color: #ef5350; }
+.gaia-tab.tab-orange { border-color: rgba(255, 152, 0, 0.3); color: #ff9800; }
+.gaia-tab.tab-lightgreen { border-color: rgba(129, 199, 132, 0.3); color: #81c784; }
+.gaia-tab.tab-darkgreen { border-color: rgba(76, 175, 80, 0.3); color: #4CAF50; }
 
-.gaia-tab.tab-red.active { background: rgba(239, 83, 80, 0.08); font-weight: 600; }
-.gaia-tab.tab-orange.active { background: rgba(255, 152, 0, 0.08); font-weight: 600; }
-.gaia-tab.tab-lightgreen.active { background: rgba(129, 199, 132, 0.08); font-weight: 600; }
-.gaia-tab.tab-darkgreen.active { background: rgba(76, 175, 80, 0.08); font-weight: 600; }
+.gaia-tab.tab-red.active { background: #ef5350; color: white; border-color: #ef5350; }
+.gaia-tab.tab-orange.active { background: #ff9800; color: white; border-color: #ff9800; }
+.gaia-tab.tab-lightgreen.active { background: #81c784; color: white; border-color: #81c784; }
+.gaia-tab.tab-darkgreen.active { background: #4CAF50; color: white; border-color: #4CAF50; }
 
 .gaia-main-area {
     flex: 1;
@@ -424,108 +432,89 @@ export const styles = `
     color: var(--gaia-text);
 }
 
-.gaia-bimodal-switch {
+.gaia-switch-wrapper {
     display: inline-flex;
     align-items: center;
-    position: relative;
-    width: 130px;
-    height: 32px;
-    border: none;
-    padding: 0;
-    outline: none;
-    border-radius: 6px;
-    cursor: pointer;
-    background-color: var(--gaia-border);
-    transition: background-color 0.3s;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-    overflow: hidden;
+    gap: 12px;
 }
 
-.gaia-bimodal-switch .bg-track {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 6px;
-    background: rgba(0,0,0,0.1);
-    z-index: 0;
-}
-
-.gaia-bimodal-switch.default .bg-track {
-    background: rgba(0,0,0,0.2);
-}
-
-.gaia-bimodal-switch.override-exposed.overridden .bg-track {
-    background: var(--gaia-success);
-}
-
-.gaia-bimodal-switch.override-hidden.overridden .bg-track {
-    background: var(--gaia-text-sec);
-}
-
-.gaia-bimodal-switch .gaia-slider {
-    position: absolute;
-    width: 60px;
-    height: 26px;
-    left: 4px;
-    bottom: 3px;
-    background-color: white;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-    z-index: 2;
-}
-
-.gaia-bimodal-switch.overridden .gaia-slider {
-    transform: translateX(62px);
-}
-
-/* Specific styling if dark mode */
-@media (prefers-color-scheme: dark) {
-    .gaia-bimodal-switch .gaia-slider {
-        background-color: #374151; /* Darker slider for less contrast */
-        border: 1px solid rgba(255,255,255,0.1);
-    }
-}
-
-.labels-container {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 4px;
-    z-index: 1;
-    pointer-events: none;
-}
-
-.gaia-bimodal-switch .label-left,
-.gaia-bimodal-switch .label-right {
-    width: 60px;
-    text-align: center;
-    font-size: 10px;
-    font-weight: 700;
+.gaia-switch-label {
+    font-size: 0.75rem;
     color: var(--gaia-text-sec);
-    letter-spacing: 0.5px;
-    z-index: 3;
-    transition: color 0.3s;
+    font-weight: 500;
+    transition: color 0.2s;
+    width: 50px;
+    text-align: center;
 }
 
-/* Highlight the active label text */
-.gaia-bimodal-switch.default .label-left {
+.gaia-switch-label.active {
     color: var(--gaia-text);
+    font-weight: 700;
 }
 
-.gaia-bimodal-switch.overridden .label-right {
-    color: white;
+.gaia-switch-label.active-exposed {
+    color: var(--gaia-primary);
+    font-weight: 700;
+}
+
+.gaia-switch-label.active-hidden {
+    color: var(--gaia-text-sec);
+    font-weight: 700;
+}
+
+.gaia-slim-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    border-radius: 12px;
+    border: none;
+    background-color: var(--gaia-border);
+    cursor: pointer;
+    padding: 0;
+    transition: background-color 0.3s;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.gaia-slim-switch .slider-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.gaia-slim-switch.overridden.override-exposed {
+    background-color: var(--gaia-primary);
+}
+
+.gaia-slim-switch.overridden.override-hidden {
+    background-color: var(--gaia-text-sec);
+}
+
+.gaia-slim-switch.overridden .slider-thumb {
+    transform: translateX(20px);
 }
 
 @media (prefers-color-scheme: dark) {
-    .gaia-bimodal-switch.overridden .label-right {
-        color: #e5e7eb;
+    .gaia-slim-switch .slider-thumb {
+        background-color: #d1d5db;
     }
-    .gaia-bimodal-switch.default .label-left {
-        color: #e5e7eb;
+    .gaia-slim-switch.overridden.override-hidden {
+        background-color: #4b5563;
     }
+}
+
+.override-badge {
+    font-size: 0.65rem;
+    background: rgba(3, 169, 244, 0.1); /* Fallback tint, overridden if ha-primary-color exists */
+    color: var(--gaia-primary);
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-weight: 700;
+    border: 1px solid rgba(3, 169, 244, 0.2);
 }
 `;

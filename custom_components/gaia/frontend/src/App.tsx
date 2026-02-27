@@ -85,32 +85,20 @@ const EntityRow = React.memo(({
             </td>
             <td style={{ textAlign: 'right', verticalAlign: 'middle' }}>
                 <div className="gaia-switch-wrapper">
+                    <span className={`gaia-switch-label ${!isOverridden ? 'active' : ''}`}>Default</span>
                     <button
                         type="button"
-                        className={`gaia-bimodal-switch ${isOverridden ? 'overridden' : 'default'} ${isOverrideExposed ? 'override-exposed' : 'override-hidden'}`}
+                        className={`gaia-slim-switch ${isOverridden ? 'overridden' : ''} ${isOverrideExposed ? 'override-exposed' : 'override-hidden'}`}
                         onClick={handleToggle}
                         title={isOverridden ? "Click to return to Default behavior" : "Click to Override Domain behavior"}
                     >
-                        <div className="bg-track"></div>
-                        <span className="gaia-slider"></span>
-
-                        {/* Labels for the track */}
-                        <div className="labels-container">
-                            {isDomainExposed ? (
-                                <>
-                                    <span className="label-left">DEFAULT</span>
-                                    <span className="label-right">HIDDEN</span>
-                                </>
-                            ) : (
-                                <>
-                                    <span className="label-left">DEFAULT</span>
-                                    <span className="label-right">EXPOSED</span>
-                                </>
-                            )}
-                        </div>
+                        <div className="slider-thumb"></div>
                     </button>
+                    <span className={`gaia-switch-label ${isOverridden ? (isOverrideExposed ? 'active-exposed' : 'active-hidden') : ''}`}>
+                        {!isOverridden ? (isDomainExposed ? 'Exposed' : 'Hidden') : (isOverrideExposed ? 'Exposed' : 'Hidden')}
+                    </span>
                     {entity.yaml_has_override && (
-                        <span style={{ fontSize: '10px', color: 'var(--gaia-primary)', marginLeft: '8px', fontWeight: 'bold' }}>OVERRIDE</span>
+                        <span className="override-badge">OVERRIDE</span>
                     )}
                 </div>
             </td>
@@ -321,14 +309,20 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                             <div className="gaia-card-header">
                                 <div className="gaia-global-switch">
                                     <span className="gaia-global-label">Global Default View:</span>
-                                    <div className="gaia-switch-wrapper">
+                                    <div className="gaia-segment-control">
                                         <button
                                             type="button"
-                                            className={`gaia-switch global ${currentMode === 'expose' ? 'checked' : ''}`}
-                                            onClick={() => setMode(currentMode === 'hide' ? 'expose' : 'hide')}
+                                            className={`gaia-segment-btn ${currentMode === 'hide' ? 'active-hide' : ''}`}
+                                            onClick={() => setMode('hide')}
                                         >
-                                            <span className="gaia-slider"></span>
-                                            <span className="gaia-switch-text">{currentMode === 'expose' ? 'EXPOSE' : 'HIDE'}</span>
+                                            Hide All by Default
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`gaia-segment-btn ${currentMode === 'expose' ? 'active-expose' : ''}`}
+                                            onClick={() => setMode('expose')}
+                                        >
+                                            Expose All by Default
                                         </button>
                                     </div>
                                     <p className="gaia-global-desc">
