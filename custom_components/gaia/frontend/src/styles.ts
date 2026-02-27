@@ -181,37 +181,115 @@ export const styles = `
     color: var(--gaia-text-sec);
 }
 
-.gaia-table-container {
-    overflow-x: auto;
+/* Accordions & Grid System */
+.gaia-accordions-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px 32px;
 }
 
-.gaia-table {
-    width: 100%;
-    border-collapse: collapse;
+.gaia-accordion {
+    border: 1px solid var(--gaia-border);
+    border-radius: 12px;
+    background: var(--gaia-card-bg);
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-.gaia-table th {
-    text-align: left;
-    padding: 12px 24px;
+.gaia-accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    cursor: pointer;
+    background: var(--gaia-card-bg);
+    transition: background-color 0.2s;
+    user-select: none;
+}
+
+.gaia-accordion-header:hover {
+    background: var(--gaia-bg);
+}
+
+.gaia-accordion-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gaia-text);
+    text-transform: capitalize;
+}
+
+.gaia-accordion-count {
+    background: var(--gaia-border);
     color: var(--gaia-text-sec);
     font-size: 0.8rem;
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--gaia-border);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 500;
 }
 
-.gaia-table td {
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--gaia-border);
-    vertical-align: middle;
+.gaia-accordion-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
 
-.gaia-table tr:hover td {
-    background: rgba(0, 0, 0, 0.02);
+.gaia-accordion-content {
+    background: var(--gaia-bg);
+    border-top: 1px solid var(--gaia-border);
+    padding: 20px;
+}
+
+/* CSS Grid for Entity Cards */
+.gaia-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+.gaia-entity-card {
+    background: var(--gaia-card-bg);
+    border: 1px solid var(--gaia-border);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.gaia-entity-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    border-color: var(--gaia-primary);
+}
+
+.gaia-entity-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
 }
 
 .gaia-entity-name {
     font-weight: 600;
-    font-size: 1.05rem;
+    font-size: 1rem;
+    color: var(--gaia-text);
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+.gaia-entity-card-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px dashed var(--gaia-border);
 }
 
 .gaia-status-badge {

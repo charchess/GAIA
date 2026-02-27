@@ -1,7 +1,7 @@
 """Constants for the GAIA integration."""
 
 DOMAIN = "gaia"
-DOMAIN_VERSION = "0.4.4"
+DOMAIN_VERSION = "0.4.5"
 
 PANEL_NAME = "gaia-dashboard"
 PANEL_TITLE = "GAIA Exposure"
