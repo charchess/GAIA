@@ -6,7 +6,7 @@ import {
     RefreshCw, Calendar, Camera, MessageSquare, Blinds, MapPin, Zap,
     Image as ImageIcon, ToggleLeft, Clock, Hash, List, Key, Music,
     Users, Gamepad2, PlaySquare, FileText, MousePointer2, Droplets,
-    Wind, Cloud, Map, Save
+    Wind, Cloud, Map, Save, Bug
 } from 'lucide-react';
 
 interface GaiaEntity {
@@ -38,11 +38,13 @@ const EntityCard = React.memo(({
     entity,
     isDomainExposed,
     pendingOverride,
+    showDebug,
     onToggle
 }: {
     entity: GaiaEntity,
     isDomainExposed: boolean,
     pendingOverride?: 'exposed' | 'hidden' | 'default',
+    showDebug: boolean,
     onToggle: (id: string, state: 'exposed' | 'hidden' | 'default') => void
 }) => {
 
@@ -76,12 +78,12 @@ const EntityCard = React.memo(({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, paddingRight: '12px' }}>
                     <div>
                         <div className="gaia-entity-name">{entity.name}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--gaia-text-sec)', marginTop: '4px', fontFamily: 'monospace' }}>
-                            {entity.id}
-                        </div>
+                        {showDebug && (
+                            <div className="gaia-entity-debug">{entity.id}</div>
+                        )}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                        <span className={`gaia-status-badge ${isCurrentlyExposed ? 'gaia-status-exposed' : 'gaia-status-hidden'}`} style={{ display: 'inline-flex', padding: '4px 8px' }}>
+                        <span className={`gaia-status-badge ${isCurrentlyExposed ? 'gaia-status-exposed' : 'gaia-status-hidden'}`}>
                             {isCurrentlyExposed ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                             {isCurrentlyExposed ? 'Exposed' : 'Hidden'}
                         </span>
@@ -94,22 +96,17 @@ const EntityCard = React.memo(({
                     </div>
                 </div>
 
-                <div className="gaia-switch-wrapper" style={{ flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', fontSize: '10px', fontWeight: 600, color: 'var(--gaia-text-sec)', padding: '0 2px' }}>
-                        <span className={!isOverridden ? 'active' : ''}>Default</span>
-                        <span className={isOverridden ? (isOverrideExposed ? 'active-exposed' : 'active-hidden') : ''}>
-                            {isOverridden ? (isOverrideExposed ? 'Exposed' : 'Hidden') : ''}
-                        </span>
-                    </div>
-                    <button
-                        type="button"
-                        className={`gaia-slim-switch ${isOverridden ? 'overridden' : ''} ${isOverrideExposed ? 'override-exposed' : 'override-hidden'}`}
-                        onClick={handleToggle}
-                        title={isOverridden ? "Return to Default" : "Override Domain"}
-                    >
-                        <div className="slider-thumb"></div>
-                    </button>
-                </div>
+                <button
+                    type="button"
+                    className={`gaia-slim-switch ${isOverridden ? 'overridden' : ''} ${isOverrideExposed ? 'override-exposed' : 'override-hidden'}`}
+                    onClick={handleToggle}
+                    title={isOverridden ? 'Return to Default' : 'Override Domain'}
+                >
+                    <span className="gaia-toggle-text">
+                        {isOverridden ? (isOverrideExposed ? 'Exposed' : 'Hidden') : 'Default'}
+                    </span>
+                    <div className="slider-thumb"></div>
+                </button>
 
             </div>
         </div>
@@ -125,6 +122,7 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
     const [domainModes, setDomainModes] = useState<Record<string, 'expose' | 'hide'>>({});
     const [pendingOverrides, setPendingOverrides] = useState<Record<string, 'exposed' | 'hidden' | 'default'>>({});
     const [expandedDomains, setExpandedDomains] = useState<Record<string, boolean>>({});
+    const [showDebug, setShowDebug] = useState(false);
 
     const fetchEntities = async () => {
         if (!hass) return;
@@ -280,8 +278,13 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
+                    <label className="gaia-debug-toggle">
+                        <input type="checkbox" checked={showDebug} onChange={(e) => setShowDebug(e.target.checked)} />
+                        <Bug size={14} />
+                        Debug
+                    </label>
                     <button className="gaia-btn" onClick={fetchEntities} disabled={isLoading}>
-                        <RefreshCw size={16} className={isLoading ? "gaia-spin" : ""} /> Refresh
+                        <RefreshCw size={16} className={isLoading ? 'gaia-spin' : ''} /> Refresh
                     </button>
                 </div>
             </header>
@@ -308,9 +311,9 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                 ) : (
                     <>
                         {Object.keys(domainCounts).length > 0 && (
-                            <div className="gaia-accordion-controls" style={{ padding: '0 32px 12px 32px', display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
-                                <button onClick={expandAll} style={{ background: 'none', border: 'none', color: 'var(--gaia-primary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Expand All</button>
-                                <button onClick={collapseAll} style={{ background: 'none', border: 'none', color: 'var(--gaia-primary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Collapse All</button>
+                            <div className="gaia-accordion-controls">
+                                <button onClick={expandAll}>Expand All</button>
+                                <button onClick={collapseAll}>Collapse All</button>
                             </div>
                         )}
                         <div className="gaia-accordions-wrapper" style={{ paddingTop: 0 }}>
@@ -337,18 +340,15 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                                                 <span className="gaia-accordion-count">{domainEntities.length}</span>
                                             </div>
                                             <div className="gaia-accordion-actions" onClick={e => e.stopPropagation()}>
-                                                <div className="gaia-switch-wrapper">
-                                                    <span className={`gaia-switch-label ${currentMode === 'hide' ? 'active-hidden' : ''}`}>Hidden</span>
-                                                    <button
-                                                        type="button"
-                                                        className={`gaia-slim-switch gaia-domain-switch ${currentMode === 'expose' ? 'overridden override-exposed' : 'override-hidden'}`}
-                                                        onClick={() => setDomainMode(domain, currentMode === 'hide' ? 'expose' : 'hide')}
-                                                        title={`Toggle default exposure for all ${domain} entities`}
-                                                    >
-                                                        <div className="slider-thumb"></div>
-                                                    </button>
-                                                    <span className={`gaia-switch-label ${currentMode === 'expose' ? 'active-exposed' : ''}`}>Exposed</span>
-                                                </div>
+                                                <button
+                                                    type="button"
+                                                    className={`gaia-slim-switch gaia-domain-switch ${currentMode === 'expose' ? 'overridden override-exposed' : 'override-hidden'}`}
+                                                    onClick={() => setDomainMode(domain, currentMode === 'hide' ? 'expose' : 'hide')}
+                                                    title={`Toggle default exposure for all ${domain} entities`}
+                                                >
+                                                    <span className="gaia-toggle-text">{currentMode === 'expose' ? 'Exposed' : 'Hidden'}</span>
+                                                    <div className="slider-thumb"></div>
+                                                </button>
                                             </div>
                                         </div>
 
@@ -361,6 +361,7 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                                                             entity={entity}
                                                             isDomainExposed={effectiveDomainModes[entity.domain] === 'expose'}
                                                             pendingOverride={pendingOverrides[entity.id]}
+                                                            showDebug={showDebug}
                                                             onToggle={toggleExposure}
                                                         />
                                                     ))}
@@ -376,40 +377,14 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
             </main>
 
             {Object.keys(pendingOverrides).length > 0 && (
-                <div style={{
-                    position: 'fixed',
-                    bottom: '24px',
-                    right: '24px',
-                    zIndex: 1000,
-                    animation: 'gaiaSubtleBounce 0.3s ease-out'
-                }}>
+                <div className="gaia-save-fab">
                     <button
-                        className="gaia-btn"
                         onClick={saveBatchConfiguration}
                         disabled={isSaving}
-                        style={{
-                            backgroundColor: 'white',
-                            color: 'black',
-                            padding: '12px 24px',
-                            borderRadius: '24px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                            fontSize: '15px',
-                            fontWeight: 600,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            cursor: isSaving ? 'wait' : 'pointer'
-                        }}
                     >
                         {isSaving ? <RefreshCw size={20} className="gaia-spin" /> : <Save size={20} />}
                         {isSaving ? 'Saving Changes...' : `Save ${Object.keys(pendingOverrides).length} Changes`}
                     </button>
-                    <style>{`
-                        @keyframes gaiaSubtleBounce {
-                            0% { transform: translateY(20px) scale(0.9); opacity: 0; }
-                            100% { transform: translateY(0) scale(1); opacity: 1; }
-                        }
-                    `}</style>
                 </div>
             )}
         </div>

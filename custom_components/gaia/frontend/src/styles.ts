@@ -9,6 +9,9 @@ export const styles = `
     --gaia-bg: #f9fafb;
     --gaia-card-bg: #ffffff;
     --gaia-border: #e5e7eb;
+    --gaia-shadow-soft: rgba(0, 0, 0, 0.05);
+    --gaia-shadow-medium: rgba(0, 0, 0, 0.1);
+    --gaia-hover-overlay: rgba(0, 0, 0, 0.03);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -18,6 +21,9 @@ export const styles = `
         --gaia-bg: #111827;
         --gaia-card-bg: #1f2937;
         --gaia-border: #374151;
+        --gaia-shadow-soft: rgba(0, 0, 0, 0.2);
+        --gaia-shadow-medium: rgba(0, 0, 0, 0.3);
+        --gaia-hover-overlay: rgba(255, 255, 255, 0.03);
     }
 }
 
@@ -25,6 +31,7 @@ export const styles = `
     box-sizing: border-box;
 }
 
+/* ===== Loading ===== */
 .gaia-loading-screen {
     display: flex;
     flex-direction: column;
@@ -35,6 +42,7 @@ export const styles = `
     font-family: var(--gaia-font);
 }
 
+/* ===== App Shell ===== */
 .gaia-app {
     display: flex;
     flex-direction: column;
@@ -44,12 +52,15 @@ export const styles = `
     font-family: var(--gaia-font);
 }
 
+/* ===== Header ===== */
 .gaia-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 24px 32px;
     background-color: var(--gaia-card-bg);
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .gaia-header-title {
@@ -69,9 +80,11 @@ export const styles = `
 .gaia-header-actions {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
+/* ===== Search ===== */
 .gaia-search {
     display: flex;
     align-items: center;
@@ -96,6 +109,7 @@ export const styles = `
     color: var(--gaia-text-sec);
 }
 
+/* ===== Buttons ===== */
 .gaia-btn {
     display: flex;
     align-items: center;
@@ -115,73 +129,49 @@ export const styles = `
     background: var(--gaia-bg);
 }
 
-.gaia-domain-select {
-    padding: 8px 36px 8px 12px;
-    border-radius: 8px;
-    border: 1px solid var(--gaia-border);
-    background-color: var(--gaia-bg);
-    color: var(--gaia-text);
-    font-size: 0.95rem;
-    font-weight: 500;
+/* ===== Debug Checkbox ===== */
+.gaia-debug-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--gaia-text-sec);
     cursor: pointer;
-    outline: none;
+    user-select: none;
     font-family: var(--gaia-font);
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 16px;
-    transition: all 0.2s;
 }
 
-.gaia-domain-select:hover {
-    border-color: var(--gaia-primary);
+.gaia-debug-toggle input[type="checkbox"] {
+    accent-color: var(--gaia-primary);
+    cursor: pointer;
 }
 
-.gaia-domain-select:focus {
-    border-color: var(--gaia-primary);
-    box-shadow: 0 0 0 2px rgba(3, 169, 244, 0.2);
-}
-
+/* ===== Main Content ===== */
 .gaia-main-area {
     flex: 1;
     padding: 32px;
     overflow-y: auto;
 }
 
-.gaia-card {
-    background: var(--gaia-card-bg);
-    border-radius: 12px;
-    border: 1px solid var(--gaia-border);
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-/* Global Mode Switch */
-.gaia-card-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--gaia-border);
-    background-color: rgba(0, 0, 0, 0.02);
-}
-
-.gaia-global-switch {
+/* ===== Accordion Controls ===== */
+.gaia-accordion-controls {
+    padding: 0 32px 12px 32px;
     display: flex;
-    align-items: center;
     gap: 16px;
+    justify-content: flex-end;
 }
 
-.gaia-global-label {
-    font-weight: 600;
-    color: var(--gaia-text);
-}
-
-.gaia-global-desc {
-    margin: 0 0 0 auto;
+.gaia-accordion-controls button {
+    background: none;
+    border: none;
+    color: var(--gaia-primary);
+    cursor: pointer;
     font-size: 0.85rem;
-    color: var(--gaia-text-sec);
+    font-weight: 600;
+    font-family: var(--gaia-font);
 }
 
-/* Accordions & Grid System */
+/* ===== Accordions ===== */
 .gaia-accordions-wrapper {
     display: flex;
     flex-direction: column;
@@ -194,7 +184,7 @@ export const styles = `
     border-radius: 12px;
     background: var(--gaia-card-bg);
     overflow: hidden;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 6px -1px var(--gaia-shadow-soft);
 }
 
 .gaia-accordion-header {
@@ -210,12 +200,12 @@ export const styles = `
 }
 
 .gaia-accordion-header:hover {
-    background: rgba(0, 0, 0, 0.03);
+    background: var(--gaia-hover-overlay);
 }
 
 .gaia-accordion-header.gaia-accordion-unsaved {
     border-left-color: var(--gaia-primary);
-    background: rgba(3, 169, 244, 0.05); /* Match tint fallback if no primary */
+    background: rgba(3, 169, 244, 0.05);
 }
 
 .gaia-accordion-unsaved .gaia-accordion-title {
@@ -253,13 +243,32 @@ export const styles = `
     padding: 20px;
 }
 
-/* CSS Grid for Entity Cards */
+/* ===== Responsive Grid ===== */
 .gaia-grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: 1fr;
     gap: 16px;
 }
 
+@media (min-width: 640px) {
+    .gaia-grid-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .gaia-grid-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1440px) {
+    .gaia-grid-container {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* ===== Entity Cards ===== */
 .gaia-entity-card {
     background: var(--gaia-card-bg);
     border: 1px solid var(--gaia-border);
@@ -268,21 +277,14 @@ export const styles = `
     display: flex;
     flex-direction: column;
     gap: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px var(--gaia-shadow-soft);
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .gaia-entity-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px -1px var(--gaia-shadow-medium);
     border-color: var(--gaia-primary);
-}
-
-.gaia-entity-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 8px;
 }
 
 .gaia-entity-name {
@@ -299,15 +301,14 @@ export const styles = `
     color: var(--gaia-primary);
 }
 
-.gaia-entity-card-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: auto;
-    padding-top: 12px;
-    border-top: 1px dashed var(--gaia-border);
+.gaia-entity-debug {
+    font-size: 11px;
+    color: var(--gaia-text-sec);
+    margin-top: 4px;
+    font-family: monospace;
 }
 
+/* ===== Status Badges ===== */
 .gaia-status-badge {
     display: inline-flex;
     align-items: center;
@@ -328,84 +329,124 @@ export const styles = `
     color: var(--gaia-text-sec);
 }
 
-/* Switches */
-.gaia-switch-wrapper {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-}
+/* ===== Toggle Switches ===== */
 
-.gaia-switch {
-    display: inline-flex;
-    align-items: center;
+/* Base Slim Switch (entity + domain) */
+.gaia-slim-switch {
     position: relative;
-    width: 96px;
-    height: 36px;
+    width: 80px;
+    height: 28px;
+    border-radius: 14px;
     border: none;
-    padding: 0;
-    outline: none;
-    border-radius: 36px;
-    cursor: pointer;
     background-color: var(--gaia-border);
+    cursor: pointer;
+    padding: 0;
     transition: background-color 0.3s;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+    overflow: hidden;
 }
 
-.gaia-slider {
+/* Thumb */
+.gaia-slim-switch .slider-thumb {
     position: absolute;
-    width: 28px;
-    height: 28px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 2;
 }
 
-.gaia-switch-text {
+/* Text inside toggle */
+.gaia-slim-switch .gaia-toggle-text {
     position: absolute;
-    width: 60px;
-    text-align: center;
-    font-size: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 8.5px;
     font-weight: 700;
-    color: var(--gaia-text-sec);
-    right: 4px;
-    transition: 0.3s;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
     z-index: 1;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+    pointer-events: none;
+    color: var(--gaia-text-sec);
+    /* Default (thumb left): text on right */
+    right: 8px;
+    left: auto;
 }
 
-.gaia-switch.checked .gaia-slider {
-    transform: translateX(60px);
+/* Overridden (thumb right): text on left */
+.gaia-slim-switch.overridden .slider-thumb {
+    transform: translateX(52px);
 }
 
-.gaia-switch.checked .gaia-switch-text {
+.gaia-slim-switch.overridden .gaia-toggle-text {
+    left: 7px;
     right: auto;
-    left: 4px;
     color: white;
 }
 
-.gaia-switch.checked {
-    background-color: var(--gaia-success);
+/* Entity Override Colors */
+.gaia-slim-switch.overridden.override-exposed {
+    background-color: var(--gaia-success) !important;
 }
 
-.gaia-switch.global {
-    width: 106px;
+.gaia-slim-switch.overridden.override-hidden {
+    background-color: var(--gaia-danger) !important;
 }
 
-.gaia-switch.global.checked {
-    background-color: var(--gaia-primary);
+/* ===== Domain Toggle ===== */
+/* Wider, always colored: red=hidden, green=exposed */
+.gaia-domain-switch {
+    width: 90px;
+    height: 30px;
+    border-radius: 15px;
+    background-color: var(--gaia-danger) !important;
 }
 
-.gaia-switch.global .gaia-switch-text {
-    width: 70px;
+.gaia-domain-switch .slider-thumb {
+    top: 4px;
+    left: 4px;
+    width: 22px;
+    height: 22px;
 }
 
-.gaia-switch.global.checked .gaia-slider {
-    transform: translateX(70px);
+.gaia-domain-switch .gaia-toggle-text {
+    color: white;
+    font-size: 9px;
 }
 
+.gaia-domain-switch.overridden.override-exposed {
+    background-color: var(--gaia-success) !important;
+}
+
+.gaia-domain-switch.overridden .slider-thumb {
+    transform: translateX(60px);
+}
+
+/* Dark mode thumb */
+@media (prefers-color-scheme: dark) {
+    .gaia-slim-switch .slider-thumb {
+        background-color: #d1d5db;
+    }
+}
+
+/* ===== Override Badge ===== */
+.override-badge {
+    font-size: 0.65rem;
+    background: rgba(3, 169, 244, 0.1);
+    color: var(--gaia-primary);
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-weight: 700;
+    border: 1px solid rgba(3, 169, 244, 0.2);
+}
+
+/* ===== Animations ===== */
 .gaia-spin {
     animation: spin 1.5s linear infinite;
 }
@@ -421,15 +462,11 @@ export const styles = `
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
+/* ===== Error & Empty States ===== */
 .gaia-error-banner {
     background-color: rgba(239, 68, 68, 0.1);
     color: var(--gaia-danger);
@@ -450,96 +487,87 @@ export const styles = `
     color: var(--gaia-text);
 }
 
-.gaia-switch-wrapper {
-    display: inline-flex;
+/* ===== Save FAB ===== */
+.gaia-save-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000;
+    animation: gaiaFabIn 0.3s ease-out;
+}
+
+.gaia-save-fab button {
+    display: flex;
     align-items: center;
-    gap: 12px;
-}
-
-.gaia-switch-label {
-    font-size: 0.75rem;
-    color: var(--gaia-text-sec);
-    font-weight: 500;
-    transition: color 0.2s;
-    width: 50px;
-    text-align: center;
-}
-
-.gaia-switch-label.active {
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 24px;
+    border: 1px solid var(--gaia-border);
+    background-color: var(--gaia-card-bg);
     color: var(--gaia-text);
-    font-weight: 700;
-}
-
-.gaia-switch-label.active-exposed {
-    color: var(--gaia-primary);
-    font-weight: 700;
-}
-
-.gaia-switch-label.active-hidden {
-    color: var(--gaia-text-sec);
-    font-weight: 700;
-}
-
-.gaia-slim-switch {
-    position: relative;
-    width: 44px;
-    height: 24px;
-    border-radius: 12px;
-    border: none;
-    background-color: var(--gaia-border); /* Default grey */
+    font-size: 15px;
+    font-weight: 600;
+    font-family: var(--gaia-font);
     cursor: pointer;
-    padding: 0;
-    transition: background-color 0.3s;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px var(--gaia-shadow-medium);
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.gaia-slim-switch .slider-thumb {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background-color: white;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+.gaia-save-fab button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px var(--gaia-shadow-medium);
 }
 
-/* Entity Overrides */
-.gaia-slim-switch.overridden.override-exposed {
-    background-color: var(--gaia-success) !important;
+.gaia-save-fab button:disabled {
+    cursor: wait;
+    opacity: 0.8;
 }
 
-.gaia-slim-switch.overridden.override-hidden {
-    background-color: var(--gaia-danger) !important;
+@keyframes gaiaFabIn {
+    0% { transform: translateY(20px) scale(0.9); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
 }
 
-.gaia-slim-switch.overridden .slider-thumb {
-    transform: translateX(20px);
-}
-
-/* Domain Global Switch Colors */
-.gaia-domain-switch {
-    background-color: var(--gaia-danger) !important; /* Base Domain is Red when hidden */
-}
-
-.gaia-domain-switch.overridden.override-exposed {
-    background-color: var(--gaia-success) !important; /* Base Domain is Green when exposed */
-}
-
-@media (prefers-color-scheme: dark) {
-    .gaia-slim-switch .slider-thumb {
-        background-color: #d1d5db;
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .gaia-header {
+        padding: 16px;
     }
-}
 
-.override-badge {
-    font-size: 0.65rem;
-    background: rgba(3, 169, 244, 0.1); /* Fallback tint, overridden if ha-primary-color exists */
-    color: var(--gaia-primary);
-    padding: 2px 6px;
-    border-radius: 8px;
-    font-weight: 700;
-    border: 1px solid rgba(3, 169, 244, 0.2);
+    .gaia-search {
+        width: 100%;
+        order: 10;
+    }
+
+    .gaia-main-area {
+        padding: 16px;
+    }
+
+    .gaia-accordions-wrapper {
+        padding: 16px;
+    }
+
+    .gaia-accordion-controls {
+        padding: 0 16px 12px 16px;
+    }
+
+    .gaia-accordion-header {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .gaia-accordion-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .gaia-empty-state {
+        padding: 32px;
+    }
+
+    .gaia-save-fab {
+        bottom: 16px;
+        right: 16px;
+    }
 }
 `;
