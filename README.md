@@ -1,57 +1,120 @@
-# GAIA - Google Assistant Integration Administrator
+# GAIA — Google Assistant Integration Administrator
 
-GAIA provides a modern, dedicated React dashboard inside Home Assistant to manage which of your devices and entities are exposed to Google Assistant.
+> **AI-Generated Software** — This project was entirely designed and coded by artificial intelligence (Claude / Anthropic). It is provided **as-is, with absolutely no warranty** — express or implied. Use at your own risk. The authors accept no responsibility for data loss, misconfiguration, or any damage resulting from the use of this software. **Always back up your YAML files before using GAIA.**
 
-**Important Note:** GAIA is a UI management layer. It requires the official Home Assistant `google_assistant` component to be configured in your `configuration.yaml` in order to actually sync the devices to Google.
+---
 
-## What It Does
+GAIA is a custom Home Assistant integration that provides a React dashboard to manage which entities are exposed to Google Assistant. It works by directly reading and writing a dedicated **`google_assistant.yaml`** file.
 
-Instead of manually typing out `entity_id` lists or navigating complex YAML configurations to hide/expose devices to Google Assistant, GAIA gives you a beautiful web interface to:
-- **Set Domain Defaults:** Choose whether entire domains (like all your `light` or `switch` entities) are exposed or hidden by default.
-- **Manage Individual Exceptions:** Quickly toggle specific entities on or off, creating exceptions to your global domain rules.
+## How It Works
 
-### 🚨 CRITICAL SETUP REQUIREMENT 🚨
-If you configure `google_assistant` manually instead of using Home Assistant Cloud (Nabu Casa), **Home Assistant locks its native UI and GAIA** if you define exposure filters in YAML. 
+GAIA does **not** use the Home Assistant database for exposure settings. Instead, it manipulates a standalone YAML file (`google_assistant.yaml`) that you include from your main `configuration.yaml`. This means:
 
-For GAIA to work, you **must delete all exposure filters** from your `configuration.yaml`. Your configuration should be completely stripped down to just the authentication:
+- All changes are transparent and version-controllable
+- You always have a human-readable file you can edit manually if needed
+- GAIA never touches your `configuration.yaml` directly
+
+### What GAIA Controls
+
+| Section | What it does |
+|---------|-------------|
+| `exposed_domains` | Which domains (light, switch, climate...) are exposed by default |
+| `entity_config` | Per-entity overrides (`expose: true/false`) |
+
+GAIA preserves YAML comments and formatting — it uses a custom line-based parser, not PyYAML.
+
+## Prerequisites
+
+### 1. Create `google_assistant.yaml`
+
+Create a file named `google_assistant.yaml` in your Home Assistant config directory (`/config/` or wherever your `configuration.yaml` lives).
+
+Minimal starting content:
 
 ```yaml
-# ✅ CORRECT GAIA CONFIGURATION:
-google_assistant:
-  project_id: yours
-  service_account: !include service.json
-  report_state: true
+# Google Assistant configuration managed by GAIA
+# Do not add project_id, service_account, or report_state here —
+# those belong in configuration.yaml
 
-# ❌ REMOVE THESE FROM YOUR YAML:
-# expose_by_default: false
-# exposed_domains: ...
-# entity_config: ...
+exposed_domains:
+  - light
+  - switch
+  - climate
+  # - cover
+  # - media_player
+  # Add or comment out domains as needed
 ```
-Once you delete these filters and restart Home Assistant, it unlocks the internal database and hands full control over to the GAIA Dashboard!
 
-![GAIA Dashboard Preview](preview.png)
+### 2. Include it from `configuration.yaml`
+
+In your `configuration.yaml`, use `!include` to reference the file:
+
+```yaml
+google_assistant:
+  project_id: your-project-id
+  service_account: !include service_account.json
+  report_state: true
+  # GAIA manages everything below via google_assistant.yaml:
+  <<: !include google_assistant.yaml
+```
+
+> **Important:** The `<<: !include` merge syntax imports the contents of `google_assistant.yaml` as if they were written inline under `google_assistant:`. This is the supported YAML merge pattern for Home Assistant.
+
+### 3. Restart Home Assistant
+
+After creating the file and updating `configuration.yaml`, restart Home Assistant for the changes to take effect.
+
+## Installation
+
+### Method 1: HACS (Recommended)
+
+1. Open **HACS** in your Home Assistant instance.
+2. Go to **Integrations** → three dots menu → **Custom repositories**.
+3. Add `https://github.com/charchess/GAIA` as an **Integration**.
+4. Search for "GAIA" and click **Download**.
+5. Restart Home Assistant.
+6. Go to **Settings → Devices & Services → Add Integration**, search for "GAIA".
+7. The **GAIA Exposure** panel appears in your sidebar.
+
+### Method 2: Manual
+
+1. Download this repository as a ZIP.
+2. Extract the `custom_components/gaia` folder into your HA `custom_components/` directory.
+3. Restart Home Assistant.
+4. Add the integration via **Settings → Devices & Services**.
 
 ## Features
 
-- **Beautiful React Dashboard**: Clean "glassmorphism" UI with dark/light mode support.
-- **Dynamic Inventory**: Automatically groups your entities by domain using a wrapping tab grid with official `lucide-react` icons.
-- **Global Domain Overrides**: Set an entire domain to "EXPOSE" or "HIDE" by default using the massive blue toggle switch.
-- **One-Click Exceptions**: Use the custom-built, physical-styled text toggles to create individual exceptions for each entity.
-- **Live Search & Filter**: Easily find the exact entity you want to expose or hide.
+- **Domain Toggles** — Set entire domains to Exposed (green) or Hidden (red) with a single click.
+- **Entity Exception Model** — Toggle individual entities as exceptions to their domain default. Grey = follows domain, red = forced hidden, green = forced exposed.
+- **Exception Persistence** — When you flip a domain, entity exceptions are automatically inverted to preserve their intent.
+- **Batch Save** — All changes are staged locally and saved in a single write to `google_assistant.yaml`.
+- **Reset** — Discard all unsaved changes with one click.
+- **Entity Control** — Click any entity name to open its Home Assistant control dialog.
+- **Debug Mode** — Toggle entity ID visibility for troubleshooting.
+- **Search** — Filter entities by name in real time.
+- **Dark Mode** — Follows your system/browser preference.
+- **YAML-Safe** — Comments and formatting are preserved. No data is ever lost.
 
-## Installation 
+## Important Limitations
 
-### Method 1: HACS (Highly Recommended)
+- GAIA **only reads and writes `google_assistant.yaml`**. It does not modify `configuration.yaml`.
+- If `google_assistant.yaml` does not exist or is not included, GAIA will fall back to looking for `google_assistant:` configuration directly in `configuration.yaml`, but this is not the recommended setup.
+- GAIA **cannot create the `exposed_domains:` block from scratch** if it's missing from the YAML. You must add at least a skeleton (see Prerequisites above).
+- GAIA does **not** sync with Google — it only configures which entities Home Assistant *offers* to Google Assistant. The actual sync is handled by the official `google_assistant` integration.
 
-GAIA is designed to be installed seamlessly via HACS (Home Assistant Community Store).
+## Disclaimer
 
-1. Open **HACS** in your Home Assistant instance.
-2. Go to **Integrations**, click the three dots in the top right corner, and select **Custom repositories**.
-3. Add the repository URL `https://github.com/charchess/GAIA` and select **Integration** as the category.
-4. Click **Add**, then search for "GAIA" and click **Download**.
-5. Restart Home Assistant.
-6. Go to **Settings > Devices & Services > Add Integration**, search for "GAIA", and configure it.
-7. The GAIA Exposure panel will appear in your left sidebar!
+> **This software is AI-generated and provided without warranty of any kind.**
+>
+> - It has **not been audited** for security, reliability, or correctness.
+> - It directly **modifies YAML configuration files** on your system.
+> - Bugs may cause **loss of configuration data** or unexpected behavior.
+> - **Always maintain backups** of your `google_assistant.yaml` and `configuration.yaml`.
+> - The authors and contributors — human or artificial — accept **no liability** for any damage, data loss, or misconfiguration caused by this software.
+>
+> By using GAIA, you acknowledge these risks and accept full responsibility.
 
-### Method 2: Manual Installation
-If you do not use HACS, you can download the repository as a ZIP, extract the `custom_components/gaia` folder, and place it directly inside your Home Assistant `custom_components/` directory. Then, restart and add the integration via the Settings UI.
+## License
+
+MIT — see [LICENSE](LICENSE) for details.
