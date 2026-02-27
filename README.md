@@ -1,40 +1,70 @@
 # GAIA — Google Assistant Integration Administrator
 
-> **AI-Generated Software** — This project was entirely designed and coded by artificial intelligence (Claude / Anthropic). It is provided **as-is, with absolutely no warranty** — express or implied. Use at your own risk. The authors accept no responsibility for data loss, misconfiguration, or any damage resulting from the use of this software. **Always back up your YAML files before using GAIA.**
+> **AI-Generated Software** — This entire project — code, architecture, and documentation — was designed and produced by artificial intelligence (Claude / Anthropic). It is provided **as-is, with absolutely no warranty**, express or implied. Use at your own risk. The authors accept no responsibility for data loss, misconfiguration, or any damage resulting from the use of this software. **Always back up your YAML files before using GAIA.**
 
 ---
 
-GAIA is a custom Home Assistant integration that provides a React dashboard to manage which entities are exposed to Google Assistant. It works by directly reading and writing a dedicated **`google_assistant.yaml`** file.
+## The Problem
 
-## How It Works
+Home Assistant offers two ways to connect Google Assistant:
 
-GAIA does **not** use the Home Assistant database for exposure settings. Instead, it manipulates a standalone YAML file (`google_assistant.yaml`) that you include from your main `configuration.yaml`. This means:
+| | **Nabu Casa (Cloud)** | **Manual Setup (YAML)** |
+|---|---|---|
+| **Cost** | ~75 €/year subscription | Free (self-hosted) |
+| **Setup** | UI-based, one click | Google Cloud project, service account, OAuth |
+| **Entity exposure UI** | Full per-entity toggles in *Settings → Voice Assistants → Expose* | **Disabled / Hidden** |
+| **Changing exposure** | Toggle in the UI, instant sync | Edit YAML, restart Home Assistant |
 
-- All changes are transparent and version-controllable
-- You always have a human-readable file you can edit manually if needed
-- GAIA never touches your `configuration.yaml` directly
+When you configure `google_assistant:` manually in YAML, Home Assistant **disables the native exposure UI entirely**. The "Expose" tab in *Settings → Voice Assistants* is [reserved for Nabu Casa users](https://github.com/home-assistant/core/issues/92445). Specifically, the presence of `exposed_domains`, `entity_config`, or `expose_by_default` in your YAML means:
 
-### What GAIA Controls
+- No per-entity toggle in the UI
+- No domain-level control in the UI
+- Every change requires manually editing YAML and restarting HA
 
-| Section | What it does |
-|---------|-------------|
-| `exposed_domains` | Which domains (light, switch, climate...) are exposed by default |
-| `entity_config` | Per-entity overrides (`expose: true/false`) |
+This forces manual users to maintain long, error-prone YAML files with hundreds of entity IDs — a tedious process that scales poorly as your smart home grows.
 
-GAIA preserves YAML comments and formatting — it uses a custom line-based parser, not PyYAML.
+## The Solution
 
-## Prerequisites
+**GAIA restores the graphical exposure management experience for manual Google Assistant users.**
+
+It provides a dedicated React dashboard inside Home Assistant that reads and writes a `google_assistant.yaml` file — giving you the same domain and per-entity control that Nabu Casa users enjoy, without the subscription.
+
+### How It Works
+
+GAIA operates on a standalone **`google_assistant.yaml`** file that you `!include` from your main `configuration.yaml`. It never touches `configuration.yaml` directly.
+
+| YAML Section | What GAIA controls |
+|---|---|
+| `exposed_domains` | Which domains (light, switch, climate…) are exposed by default |
+| `entity_config` | Per-entity overrides (`expose: true` / `expose: false`) |
+
+GAIA uses a custom line-based YAML parser that **preserves comments and formatting** — it does not use PyYAML, which would strip comments and break `!secret` / `!include` tags.
+
+## Who Is This For?
+
+You need GAIA if:
+
+- ✅ You use the **manual** `google_assistant:` integration (not Nabu Casa)
+- ✅ You want to **control entity exposure from a UI** instead of editing YAML by hand
+- ✅ You have **dozens or hundreds of entities** and managing them in YAML is painful
+- ✅ You want domain-level defaults with per-entity exceptions
+- ✅ You prefer **keeping your config in YAML files** (version-controllable, auditable)
+
+You do **not** need GAIA if:
+
+- ❌ You use **Nabu Casa / Home Assistant Cloud** — you already have the Expose UI
+- ❌ You have very few entities and YAML editing is manageable
+
+## Setup
 
 ### 1. Create `google_assistant.yaml`
 
-Create a file named `google_assistant.yaml` in your Home Assistant config directory (`/config/` or wherever your `configuration.yaml` lives).
-
-Minimal starting content:
+Create this file in your Home Assistant config directory (`/config/`):
 
 ```yaml
-# Google Assistant configuration managed by GAIA
-# Do not add project_id, service_account, or report_state here —
-# those belong in configuration.yaml
+# Google Assistant exposure — managed by GAIA
+# Authentication (project_id, service_account, report_state) belongs
+# in configuration.yaml, NOT here.
 
 exposed_domains:
   - light
@@ -42,66 +72,64 @@ exposed_domains:
   - climate
   # - cover
   # - media_player
-  # Add or comment out domains as needed
+  # - camera
+  # Comment/uncomment domains as needed
 ```
 
 ### 2. Include it from `configuration.yaml`
-
-In your `configuration.yaml`, use `!include` to reference the file:
 
 ```yaml
 google_assistant:
   project_id: your-project-id
   service_account: !include service_account.json
   report_state: true
-  # GAIA manages everything below via google_assistant.yaml:
+  # Everything below is managed by GAIA via google_assistant.yaml:
   <<: !include google_assistant.yaml
 ```
 
-> **Important:** The `<<: !include` merge syntax imports the contents of `google_assistant.yaml` as if they were written inline under `google_assistant:`. This is the supported YAML merge pattern for Home Assistant.
+The `<<: !include` merge syntax imports the contents of `google_assistant.yaml` as if they were written inline under `google_assistant:`.
 
-### 3. Restart Home Assistant
+### 3. Install GAIA
 
-After creating the file and updating `configuration.yaml`, restart Home Assistant for the changes to take effect.
+#### HACS (Recommended)
 
-## Installation
+1. Open **HACS** → **Integrations** → three dots → **Custom repositories**
+2. Add `https://github.com/charchess/GAIA` as **Integration**
+3. Search "GAIA" → **Download**
+4. Restart Home Assistant
+5. **Settings → Devices & Services → Add Integration** → search "GAIA"
+6. The **GAIA Exposure** panel appears in your sidebar
 
-### Method 1: HACS (Recommended)
+#### Manual
 
-1. Open **HACS** in your Home Assistant instance.
-2. Go to **Integrations** → three dots menu → **Custom repositories**.
-3. Add `https://github.com/charchess/GAIA` as an **Integration**.
-4. Search for "GAIA" and click **Download**.
-5. Restart Home Assistant.
-6. Go to **Settings → Devices & Services → Add Integration**, search for "GAIA".
-7. The **GAIA Exposure** panel appears in your sidebar.
-
-### Method 2: Manual
-
-1. Download this repository as a ZIP.
-2. Extract the `custom_components/gaia` folder into your HA `custom_components/` directory.
-3. Restart Home Assistant.
-4. Add the integration via **Settings → Devices & Services**.
+1. Download this repository as ZIP
+2. Copy `custom_components/gaia` into your HA `custom_components/` directory
+3. Restart Home Assistant
+4. Add the integration via Settings
 
 ## Features
 
-- **Domain Toggles** — Set entire domains to Exposed (green) or Hidden (red) with a single click.
-- **Entity Exception Model** — Toggle individual entities as exceptions to their domain default. Grey = follows domain, red = forced hidden, green = forced exposed.
-- **Exception Persistence** — When you flip a domain, entity exceptions are automatically inverted to preserve their intent.
-- **Batch Save** — All changes are staged locally and saved in a single write to `google_assistant.yaml`.
-- **Reset** — Discard all unsaved changes with one click.
-- **Entity Control** — Click any entity name to open its Home Assistant control dialog.
-- **Debug Mode** — Toggle entity ID visibility for troubleshooting.
-- **Search** — Filter entities by name in real time.
-- **Dark Mode** — Follows your system/browser preference.
-- **YAML-Safe** — Comments and formatting are preserved. No data is ever lost.
+- **Domain Toggles** — Expose (green) or Hide (red) entire domains with one click
+- **Exception Model** — Toggle individual entities as exceptions to their domain default:
+  - Grey = follows domain default
+  - Red = forced hidden (on an exposed domain)
+  - Green = forced exposed (on a hidden domain)
+- **Smart Inversion** — When you flip a domain, entity exceptions are automatically inverted to preserve your intent
+- **Batch Save** — All changes are staged locally and written in a single operation
+- **Reset** — Discard all unsaved changes with one click
+- **Entity Control** — Click any entity name to open its Home Assistant control dialog
+- **Debug Mode** — Show entity IDs for troubleshooting
+- **Live Search** — Filter entities by name in real time
+- **Dark Mode** — Automatic, follows your system preference
+- **YAML-Safe** — Comments, formatting, and `!include`/`!secret` tags are preserved
 
-## Important Limitations
+## Limitations
 
-- GAIA **only reads and writes `google_assistant.yaml`**. It does not modify `configuration.yaml`.
-- If `google_assistant.yaml` does not exist or is not included, GAIA will fall back to looking for `google_assistant:` configuration directly in `configuration.yaml`, but this is not the recommended setup.
-- GAIA **cannot create the `exposed_domains:` block from scratch** if it's missing from the YAML. You must add at least a skeleton (see Prerequisites above).
-- GAIA does **not** sync with Google — it only configures which entities Home Assistant *offers* to Google Assistant. The actual sync is handled by the official `google_assistant` integration.
+- GAIA **only reads and writes `google_assistant.yaml`**. It never modifies `configuration.yaml`.
+- GAIA **cannot create the `exposed_domains:` block** if it's missing from the YAML file. You must provide at least the skeleton shown above.
+- If `google_assistant.yaml` doesn't exist, GAIA falls back to looking for config in `configuration.yaml` directly — this works but is not recommended.
+- GAIA **does not sync with Google**. It configures which entities HA *offers* to Google Assistant. The actual sync is handled by the official `google_assistant` integration.
+- After saving changes in GAIA, you may need to **restart HA or reload the integration** for Google to pick up the new exposure settings.
 
 ## Disclaimer
 
