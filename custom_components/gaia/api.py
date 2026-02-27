@@ -35,6 +35,7 @@ def read_config_from_yaml(filepath: str) -> tuple[dict, list, bool]:
         # yaml.safe_load drops comments so we wouldn't see "# - light"
         exposed_domains = []
         exposed_domains_indent = 0
+        in_exposed_domains = False
         
         for line in lines:
             stripped = line.strip()
