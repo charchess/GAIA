@@ -71,22 +71,36 @@ const EntityCard = React.memo(({
 
     return (
         <div className={`gaia-entity-card ${pendingOverride ? 'gaia-entity-unsaved' : ''}`}>
-            <div className="gaia-entity-card-header">
-                <div>
-                    <div className="gaia-entity-name">{entity.name}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--gaia-text-sec)', marginTop: '4px', fontFamily: 'monospace' }}>
-                        {entity.id}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, paddingRight: '12px' }}>
+                    <div>
+                        <div className="gaia-entity-name">{entity.name}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--gaia-text-sec)', marginTop: '4px', fontFamily: 'monospace' }}>
+                            {entity.id}
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span className={`gaia-status-badge ${isCurrentlyExposed ? 'gaia-status-exposed' : 'gaia-status-hidden'}`} style={{ display: 'inline-flex', padding: '4px 8px' }}>
+                            {isCurrentlyExposed ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                            {isCurrentlyExposed ? 'Exposed' : 'Hidden'}
+                        </span>
+                        {entity.yaml_has_override && !pendingOverride && (
+                            <span className="override-badge">YML OVERRIDE</span>
+                        )}
+                        {pendingOverride && (
+                            <span className="override-badge" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--gaia-danger)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>UNSAVED</span>
+                        )}
                     </div>
                 </div>
-                <span className={`gaia-status-badge ${isCurrentlyExposed ? 'gaia-status-exposed' : 'gaia-status-hidden'}`}>
-                    {isCurrentlyExposed ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                    {isCurrentlyExposed ? 'Exposed' : 'Hidden'}
-                </span>
-            </div>
 
-            <div className="gaia-entity-card-controls">
-                <div className="gaia-switch-wrapper">
-                    <span className={`gaia-switch-label ${!isOverridden ? 'active' : ''}`} style={{ width: '40px', fontSize: '10px' }}>Default</span>
+                <div className="gaia-switch-wrapper" style={{ flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', fontSize: '10px', fontWeight: 600, color: 'var(--gaia-text-sec)', padding: '0 2px' }}>
+                        <span className={!isOverridden ? 'active' : ''}>Default</span>
+                        <span className={isOverridden ? (isOverrideExposed ? 'active-exposed' : 'active-hidden') : ''}>
+                            {isOverridden ? (isOverrideExposed ? 'Exposed' : 'Hidden') : ''}
+                        </span>
+                    </div>
                     <button
                         type="button"
                         className={`gaia-slim-switch ${isOverridden ? 'overridden' : ''} ${isOverrideExposed ? 'override-exposed' : 'override-hidden'}`}
@@ -95,13 +109,8 @@ const EntityCard = React.memo(({
                     >
                         <div className="slider-thumb"></div>
                     </button>
-                    <span className={`gaia-switch-label ${isOverridden ? (isOverrideExposed ? 'active-exposed' : 'active-hidden') : ''}`} style={{ width: '40px', fontSize: '10px' }}>
-                        {!isOverridden ? (isDomainExposed ? 'Exposed' : 'Hidden') : (isOverrideExposed ? 'Exposed' : 'Hidden')}
-                    </span>
-                    {entity.yaml_has_override && (
-                        <span className="override-badge" style={{ marginLeft: 'auto' }}>OVERRIDE</span>
-                    )}
                 </div>
+
             </div>
         </div>
     );
