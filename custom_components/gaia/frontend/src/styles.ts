@@ -333,29 +333,36 @@ export const styles = `
 
 /* Base Slim Switch (entity + domain) */
 .gaia-slim-switch {
-    position: relative;
-    width: 100px;
-    height: 32px;
-    border-radius: 16px;
-    border: none;
-    background-color: var(--gaia-border);
-    cursor: pointer;
-    padding: 0;
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    width: 100px !important;
+    min-width: 100px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    border-radius: 16px !important;
+    border: none !important;
+    background-color: var(--gaia-border) !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    margin: 0 !important;
     transition: background-color 0.3s;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
-    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1) !important;
+    overflow: hidden !important;
     flex-shrink: 0;
+    -webkit-appearance: none !important;
+    appearance: none !important;
 }
 
 /* Thumb */
 .gaia-slim-switch .slider-thumb {
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    background-color: white;
+    position: absolute !important;
+    top: 3px !important;
+    left: 3px !important;
+    width: 26px !important;
+    height: 26px !important;
+    border-radius: 50% !important;
+    background-color: white !important;
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 2;
@@ -363,32 +370,31 @@ export const styles = `
 
 /* Text inside toggle */
 .gaia-slim-switch .gaia-toggle-text {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 10px;
-    font-weight: 700;
+    position: absolute !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
     letter-spacing: 0.5px;
     text-transform: uppercase;
     z-index: 1;
-    transition: opacity 0.2s;
     white-space: nowrap;
     pointer-events: none;
-    color: var(--gaia-text);
+    color: var(--gaia-text) !important;
     /* Default (thumb left): text on right */
-    right: 10px;
-    left: auto;
+    right: 10px !important;
+    left: auto !important;
 }
 
 /* Overridden (thumb right): text on left */
 .gaia-slim-switch.overridden .slider-thumb {
-    transform: translateX(68px);
+    transform: translateX(68px) !important;
 }
 
 .gaia-slim-switch.overridden .gaia-toggle-text {
-    left: 9px;
-    right: auto;
-    color: white;
+    left: 9px !important;
+    right: auto !important;
+    color: white !important;
 }
 
 /* Entity Override Colors */
@@ -403,22 +409,24 @@ export const styles = `
 /* ===== Domain Toggle ===== */
 /* Wider, always colored: red=hidden, green=exposed */
 .gaia-domain-switch {
-    width: 110px;
-    height: 34px;
-    border-radius: 17px;
+    width: 110px !important;
+    min-width: 110px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    border-radius: 17px !important;
     background-color: var(--gaia-danger) !important;
 }
 
 .gaia-domain-switch .slider-thumb {
-    top: 4px;
-    left: 4px;
-    width: 26px;
-    height: 26px;
+    top: 4px !important;
+    left: 4px !important;
+    width: 26px !important;
+    height: 26px !important;
 }
 
 .gaia-domain-switch .gaia-toggle-text {
-    color: white;
-    font-size: 11px;
+    color: white !important;
+    font-size: 11px !important;
 }
 
 .gaia-domain-switch.overridden.override-exposed {
@@ -426,13 +434,13 @@ export const styles = `
 }
 
 .gaia-domain-switch.overridden .slider-thumb {
-    transform: translateX(76px);
+    transform: translateX(76px) !important;
 }
 
 /* Dark mode thumb */
 @media (prefers-color-scheme: dark) {
     .gaia-slim-switch .slider-thumb {
-        background-color: #d1d5db;
+        background-color: #d1d5db !important;
     }
 }
 
@@ -494,6 +502,8 @@ export const styles = `
     bottom: 24px;
     right: 24px;
     z-index: 1000;
+    display: flex;
+    gap: 12px;
     animation: gaiaFabIn 0.3s ease-out;
 }
 
@@ -522,6 +532,18 @@ export const styles = `
 .gaia-save-fab button:disabled {
     cursor: wait;
     opacity: 0.8;
+}
+
+.gaia-save-fab .gaia-fab-reset {
+    background-color: transparent;
+    border: 1px solid var(--gaia-border);
+    color: var(--gaia-text-sec);
+}
+
+.gaia-save-fab .gaia-fab-reset:hover {
+    background-color: var(--gaia-card-bg);
+    color: var(--gaia-danger);
+    border-color: var(--gaia-danger);
 }
 
 @keyframes gaiaFabIn {

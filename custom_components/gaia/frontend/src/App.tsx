@@ -6,7 +6,7 @@ import {
     RefreshCw, Calendar, Camera, MessageSquare, Blinds, MapPin, Zap,
     Image as ImageIcon, ToggleLeft, Clock, Hash, List, Key, Music,
     Users, Gamepad2, PlaySquare, FileText, MousePointer2, Droplets,
-    Wind, Cloud, Map, Save, Bug
+    Wind, Cloud, Map, Save, Bug, RotateCcw
 } from 'lucide-react';
 
 interface GaiaEntity {
@@ -379,11 +379,19 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
             {Object.keys(pendingOverrides).length > 0 && (
                 <div className="gaia-save-fab">
                     <button
+                        className="gaia-fab-reset"
+                        onClick={() => setPendingOverrides({})}
+                        disabled={isSaving}
+                    >
+                        <RotateCcw size={18} />
+                        Reset
+                    </button>
+                    <button
                         onClick={saveBatchConfiguration}
                         disabled={isSaving}
                     >
                         {isSaving ? <RefreshCw size={20} className="gaia-spin" /> : <Save size={20} />}
-                        {isSaving ? 'Saving Changes...' : `Save ${Object.keys(pendingOverrides).length} Changes`}
+                        {isSaving ? 'Saving...' : `Save ${Object.keys(pendingOverrides).length} Changes`}
                     </button>
                 </div>
             )}
