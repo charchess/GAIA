@@ -6,7 +6,7 @@ import {
     RefreshCw, Calendar, Camera, MessageSquare, Blinds, MapPin, Zap,
     Image as ImageIcon, ToggleLeft, Clock, Hash, List, Key, Music,
     Users, Gamepad2, PlaySquare, FileText, MousePointer2, Droplets,
-    Wind, Cloud, Map
+    Wind, Cloud, Map, Save
 } from 'lucide-react';
 
 interface GaiaEntity {
@@ -36,21 +36,30 @@ const DOMAIN_ICONS: Record<string, React.ReactNode> = {
 
 const EntityRow = React.memo(({
     entity,
+    isDomainExposed,
+    pendingOverride,
     onToggle
 }: {
     entity: GaiaEntity,
+    isDomainExposed: boolean,
+    pendingOverride?: 'exposed' | 'hidden' | 'default',
     onToggle: (id: string, state: 'exposed' | 'hidden' | 'default') => void
 }) => {
 
-    // Determine the two possible states for this entity based on its parent's domain state
-    const isDomainExposed = entity.domain_exposed;
+    let isOverridden = entity.yaml_has_override;
+    let isOverrideExposed = !isDomainExposed;
+    let isCurrentlyExposed = isOverridden ? entity.override_value : isDomainExposed;
 
-    // If domain is exposed: Default = Exposed, Override = Hidden
-    // If domain is hidden: Default = Hidden, Override = Exposed
-    const isOverridden = entity.yaml_has_override;
-    const isOverrideExposed = !isDomainExposed; // If domain is hidden, the override is to expose it
-
-    const isCurrentlyExposed = isOverridden ? entity.override_value : isDomainExposed;
+    if (pendingOverride) {
+        if (pendingOverride === 'default') {
+            isOverridden = false;
+            isCurrentlyExposed = isDomainExposed;
+        } else {
+            isOverridden = true;
+            isOverrideExposed = pendingOverride === 'exposed';
+            isCurrentlyExposed = pendingOverride === 'exposed';
+        }
+    }
 
     const handleToggle = () => {
         if (isOverridden) {
@@ -114,8 +123,10 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
     const [activeTab, setActiveTab] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [domainModes, setDomainModes] = useState<Record<string, 'expose' | 'hide'>>({});
+    const [pendingOverrides, setPendingOverrides] = useState<Record<string, 'exposed' | 'hidden' | 'default'>>({});
 
     const fetchEntities = async () => {
         if (!hass) return;
@@ -154,18 +165,24 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
     }, [hass]);
 
     const toggleExposure = async (id: string, targetState: 'exposed' | 'hidden' | 'default') => {
-        if (!hass) return;
+        setPendingOverrides(prev => ({ ...prev, [id]: targetState }));
+    };
 
+    const saveBatchConfiguration = async () => {
+        if (!hass || Object.keys(pendingOverrides).length === 0) return;
+        setIsSaving(true);
         try {
             await hass.connection.sendMessagePromise({
-                type: 'gaia/update_exposure',
-                entity_id: id,
-                state: targetState
+                type: 'gaia/batch_update_exposures',
+                updates: pendingOverrides
             });
-            // We fetch fresh state from backend because it is the source of truth
-            fetchEntities();
+            setPendingOverrides({});
+            await fetchEntities();
         } catch (err) {
-            console.error('Failed to update exposure:', err);
+            console.error('Batch save failed', err);
+            setError('Failed to save configuration.');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -200,22 +217,16 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
         );
     }
 
-    const currentMode = domainModes[activeTab] || 'hide'; // Default to hide
-    const setMode = async (mode: 'expose' | 'hide') => {
-        const previousMode = currentMode;
-        setDomainModes(prev => ({ ...prev, [activeTab]: mode }));
-        if (!hass) return;
-        try {
-            await hass.connection.sendMessagePromise({
-                type: 'gaia/update_domain_exposure',
-                domain: activeTab,
-                expose: mode === 'expose'
-            });
-            fetchEntities(); // Refetch the true YAML stat
-        } catch (err) {
-            console.error('Failed to update domain exposure:', err);
-            setDomainModes(prev => ({ ...prev, [activeTab]: previousMode }));
+    const effectiveDomainModes = { ...domainModes };
+    Object.keys(pendingOverrides).forEach(key => {
+        if (!key.includes('.')) {
+            effectiveDomainModes[key] = pendingOverrides[key] === 'exposed' ? 'expose' : 'hide';
         }
+    });
+
+    const currentMode = effectiveDomainModes[activeTab] || 'hide'; // Default to hide
+    const setMode = async (mode: 'expose' | 'hide') => {
+        setPendingOverrides(prev => ({ ...prev, [activeTab]: mode === 'expose' ? 'exposed' : 'hidden' }));
     };
 
     return (
@@ -253,9 +264,17 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                 </button>
                 {Object.entries(domainCounts).map(([domain, count]) => {
                     const domainEntities = entities.filter(e => e.domain === domain);
-                    const isDomainExposed = domainEntities.length > 0 ? domainEntities[0].domain_exposed : false;
-                    const hasExposedOverrides = domainEntities.some(e => e.yaml_has_override && e.override_value === true);
-                    const hasHiddenOverrides = domainEntities.some(e => e.yaml_has_override && e.override_value === false);
+                    const isDomainExposed = effectiveDomainModes[domain] === 'expose';
+                    const hasExposedOverrides = domainEntities.some(e => {
+                        const localOverride = pendingOverrides[e.id];
+                        if (localOverride !== undefined) return localOverride === 'exposed';
+                        return e.yaml_has_override && e.override_value === true;
+                    });
+                    const hasHiddenOverrides = domainEntities.some(e => {
+                        const localOverride = pendingOverrides[e.id];
+                        if (localOverride !== undefined) return localOverride === 'hidden';
+                        return e.yaml_has_override && e.override_value === false;
+                    });
 
                     let colorClass = "";
                     if (!isDomainExposed) {
@@ -335,6 +354,8 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                                         <EntityRow
                                             key={entity.id}
                                             entity={entity}
+                                            isDomainExposed={effectiveDomainModes[entity.domain] === 'expose'}
+                                            pendingOverride={pendingOverrides[entity.id]}
                                             onToggle={toggleExposure}
                                         />
                                     ))}
@@ -344,6 +365,44 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                     </div>
                 )}
             </main>
+
+            {Object.keys(pendingOverrides).length > 0 && (
+                <div style={{
+                    position: 'fixed',
+                    bottom: '24px',
+                    right: '24px',
+                    zIndex: 1000,
+                    animation: 'gaiaSubtleBounce 0.3s ease-out'
+                }}>
+                    <button
+                        className="gaia-btn"
+                        onClick={saveBatchConfiguration}
+                        disabled={isSaving}
+                        style={{
+                            backgroundColor: 'white',
+                            color: 'black',
+                            padding: '12px 24px',
+                            borderRadius: '24px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                            fontSize: '15px',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            cursor: isSaving ? 'wait' : 'pointer'
+                        }}
+                    >
+                        {isSaving ? <RefreshCw size={20} className="gaia-spin" /> : <Save size={20} />}
+                        {isSaving ? 'Saving Changes...' : `Save ${Object.keys(pendingOverrides).length} Changes`}
+                    </button>
+                    <style>{`
+                        @keyframes gaiaSubtleBounce {
+                            0% { transform: translateY(20px) scale(0.9); opacity: 0; }
+                            100% { transform: translateY(0) scale(1); opacity: 1; }
+                        }
+                    `}</style>
+                </div>
+            )}
         </div>
     );
 }

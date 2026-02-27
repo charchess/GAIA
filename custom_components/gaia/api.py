@@ -81,14 +81,17 @@ def read_config_from_yaml(filepath: str) -> tuple[dict, list, bool]:
         
     return {}, [], False
 
-def update_yaml_domain_exposure(filepath: str, domain: str, should_expose: bool) -> bool:
+def update_yaml_domain_exposure(filepath: str, domain: str, should_expose: bool, lines: list | None = None) -> bool:
     """Comment or uncomment a domain in exposed_domains."""
     if not filepath or not os.path.exists(filepath):
         return False
         
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
+        written_lines = False
+        if lines is None:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+            written_lines = True
             
         in_ga = False
         in_exposed_domains = False
@@ -162,22 +165,26 @@ def update_yaml_domain_exposure(filepath: str, domain: str, should_expose: bool)
                  # Very complex to guess correctly without ruamel, avoiding for now to keep it safe.
                  pass
                  
-        with open(filepath, 'w', encoding='utf-8') as f:
-            f.writelines(lines)
+        if written_lines:
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.writelines(lines)
             
         return True
     except Exception as e:
         _LOGGER.error(f"Failed to write GAIA domain YAML update: {e}")
         return False
 
-def update_yaml_exposure(filepath: str, entity_id: str, state: str) -> bool:
+def update_yaml_exposure(filepath: str, entity_id: str, state: str, lines: list | None = None) -> bool:
     """Updates a specific entity's expose property in YAML while preserving comments."""
     if not filepath or not os.path.exists(filepath):
         return False
         
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
+        written_lines = False
+        if lines is None:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+            written_lines = True
             
         is_ga_file = filepath.endswith('google_assistant.yaml')
         
@@ -298,6 +305,7 @@ def async_register_websockets(hass: HomeAssistant):
     websocket_api.async_register_command(hass, ws_get_entities)
     websocket_api.async_register_command(hass, ws_update_exposure)
     websocket_api.async_register_command(hass, ws_update_domain_exposure)
+    websocket_api.async_register_command(hass, ws_batch_update_exposures)
 
 @websocket_api.websocket_command(
     {
