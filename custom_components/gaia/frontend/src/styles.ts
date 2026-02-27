@@ -334,9 +334,9 @@ export const styles = `
 /* Base Slim Switch (entity + domain) */
 .gaia-slim-switch {
     position: relative;
-    width: 80px;
-    height: 28px;
-    border-radius: 14px;
+    width: 100px;
+    height: 32px;
+    border-radius: 16px;
     border: none;
     background-color: var(--gaia-border);
     cursor: pointer;
@@ -344,6 +344,7 @@ export const styles = `
     transition: background-color 0.3s;
     box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 /* Thumb */
@@ -351,8 +352,8 @@ export const styles = `
     position: absolute;
     top: 3px;
     left: 3px;
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     background-color: white;
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
@@ -365,27 +366,27 @@ export const styles = `
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 8.5px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
     z-index: 1;
     transition: opacity 0.2s;
     white-space: nowrap;
     pointer-events: none;
-    color: var(--gaia-text-sec);
+    color: var(--gaia-text);
     /* Default (thumb left): text on right */
-    right: 8px;
+    right: 10px;
     left: auto;
 }
 
 /* Overridden (thumb right): text on left */
 .gaia-slim-switch.overridden .slider-thumb {
-    transform: translateX(52px);
+    transform: translateX(68px);
 }
 
 .gaia-slim-switch.overridden .gaia-toggle-text {
-    left: 7px;
+    left: 9px;
     right: auto;
     color: white;
 }
@@ -402,22 +403,22 @@ export const styles = `
 /* ===== Domain Toggle ===== */
 /* Wider, always colored: red=hidden, green=exposed */
 .gaia-domain-switch {
-    width: 90px;
-    height: 30px;
-    border-radius: 15px;
+    width: 110px;
+    height: 34px;
+    border-radius: 17px;
     background-color: var(--gaia-danger) !important;
 }
 
 .gaia-domain-switch .slider-thumb {
     top: 4px;
     left: 4px;
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
 }
 
 .gaia-domain-switch .gaia-toggle-text {
     color: white;
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .gaia-domain-switch.overridden.override-exposed {
@@ -425,7 +426,7 @@ export const styles = `
 }
 
 .gaia-domain-switch.overridden .slider-thumb {
-    transform: translateX(60px);
+    transform: translateX(76px);
 }
 
 /* Dark mode thumb */
