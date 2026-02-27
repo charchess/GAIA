@@ -141,18 +141,20 @@ def update_yaml_domain_exposure(filepath: str, domain: str, should_expose: bool,
                     break
                     
         if domain_idx != -1:
+            base_indent_str = " " * exposed_domains_indent
+            child_indent_str = base_indent_str + "  "
+            
             if should_expose and is_commented:
-                # uncomment: replace the first '#' with space or remove it
-                lines[domain_idx] = lines[domain_idx].replace('#', ' ', 1)
+                # uncomment: rewrite line with strict indentation
+                lines[domain_idx] = f"{child_indent_str}- {domain}\n"
             elif not should_expose and not is_commented:
-                # comment
-                lines[domain_idx] = domain_indent + "# " + lines[domain_idx].lstrip()
+                # comment: rewrite line with strict indentation
+                lines[domain_idx] = f"{child_indent_str}# - {domain}\n"
         else:
             # We need to inject it under exposed_domains
             if exposed_domains_idx != -1:
-                base_indent_match = re.search(r'^(\s*)', lines[exposed_domains_idx])
-                base_indent = base_indent_match.group(1) if base_indent_match else ""
-                child_indent = base_indent + "  "
+                base_indent_str = " " * exposed_domains_indent
+                child_indent = base_indent_str + "  "
                 
                 if should_expose:
                     new_line = f"{child_indent}- {domain}\n"
