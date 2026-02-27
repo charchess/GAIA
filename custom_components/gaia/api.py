@@ -399,3 +399,48 @@ def ws_update_domain_exposure(hass: HomeAssistant, connection: websocket_api.Act
             
     connection.send_result(msg["id"], {"success": success, "domain": domain, "exposed": should_expose})
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "gaia/batch_update_exposures",
+        vol.Required("updates"): dict,
+    }
+)
+@callback
+def ws_batch_update_exposures(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict):
+    """Handle batch updates for domains and entities."""
+    updates = msg.get("updates", {})
+    if not updates:
+        connection.send_result(msg["id"], {"status": "success", "message": "No updates provided"})
+        return
+        
+    yaml_path = get_google_assistant_yaml_path(hass)
+    if not yaml_path:
+        connection.send_error(msg["id"], "not_found", "google_assistant YAML configuration not found.")
+        return
+        
+    try:
+        with open(yaml_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+            
+        success = True
+        for entity_or_domain, state in updates.items():
+            if '.' not in entity_or_domain:
+                # It's a domain
+                should_expose = state == "exposed"
+                if not update_yaml_domain_exposure(yaml_path, entity_or_domain, should_expose, lines):
+                    success = False
+            else:
+                # It's an entity
+                if not update_yaml_exposure(yaml_path, entity_or_domain, state, lines):
+                    success = False
+                    
+        if success:
+            with open(yaml_path, 'w', encoding='utf-8') as f:
+                f.writelines(lines)
+            hass.async_create_task(hass.services.async_call("google_assistant", "reload", blocking=False))
+            connection.send_result(msg["id"], {"status": "success", "message": "Batch update applied."})
+        else:
+            connection.send_error(msg["id"], "update_failed", "Failed to apply one or more updates.")
+    except Exception as e:
+        _LOGGER.error(f"Error in batch update: {e}")
+        connection.send_error(msg["id"], "unknown_error", str(e))
