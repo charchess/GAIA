@@ -4,30 +4,21 @@
 
 ---
 
-## The Problem
+## Why GAIA Exists
 
-Home Assistant offers two ways to connect Google Assistant:
+[Nabu Casa](https://www.nabucasa.com/) is an excellent service. It funds Home Assistant development, it simplifies setup, and it gives you a beautiful UI to manage which entities are exposed to Google Assistant. **If you can afford it, subscribe** — it's worth every cent and supports the project we all depend on.
 
-| | **Nabu Casa (Cloud)** | **Manual Setup (YAML)** |
-|---|---|---|
-| **Cost** | ~75 €/year subscription | Free (self-hosted) |
-| **Setup** | UI-based, one click | Google Cloud project, service account, OAuth |
-| **Entity exposure UI** | Full per-entity toggles in *Settings → Voice Assistants → Expose* | **Disabled / Hidden** |
-| **Changing exposure** | Toggle in the UI, instant sync | Edit YAML, restart Home Assistant |
+But sometimes in life, every euro counts. And if you've chosen the manual `google_assistant:` setup to avoid the subscription, you've discovered the trade-off: **Home Assistant completely disables the exposure UI**.
 
-When you configure `google_assistant:` manually in YAML, Home Assistant **disables the native exposure UI entirely**. The "Expose" tab in *Settings → Voice Assistants* is [reserved for Nabu Casa users](https://github.com/home-assistant/core/issues/92445). Specifically, the presence of `exposed_domains`, `entity_config`, or `expose_by_default` in your YAML means:
+The "Expose" tab in *Settings → Voice Assistants* is [only available to Nabu Casa users](https://github.com/home-assistant/core/issues/92445). With manual YAML configuration, there are:
 
-- No per-entity toggle in the UI
-- No domain-level control in the UI
-- Every change requires manually editing YAML and restarting HA
+- No per-entity toggles
+- No domain-level control
+- No graphical interface at all
 
-This forces manual users to maintain long, error-prone YAML files with hundreds of entity IDs — a tedious process that scales poorly as your smart home grows.
+Every change means editing YAML by hand, hunting for entity IDs, and restarting Home Assistant. With dozens or hundreds of entities, this becomes unsustainable.
 
-## The Solution
-
-**GAIA restores the graphical exposure management experience for manual Google Assistant users.**
-
-It provides a dedicated React dashboard inside Home Assistant that reads and writes a `google_assistant.yaml` file — giving you the same domain and per-entity control that Nabu Casa users enjoy, without the subscription.
+**GAIA gives manual users the UI experience back** — a dedicated dashboard to manage domains and entity exposure, without the subscription.
 
 ### How It Works
 
@@ -52,8 +43,8 @@ You need GAIA if:
 
 You do **not** need GAIA if:
 
-- ❌ You use **Nabu Casa / Home Assistant Cloud** — you already have the Expose UI
-- ❌ You have very few entities and YAML editing is manageable
+- ❌ You use **Nabu Casa** — you already have the Expose UI (and thank you for supporting HA development!)
+- ❌ You have very few entities and YAML editing doesn't bother you
 
 ## Setup
 
