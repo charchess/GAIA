@@ -1,12 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { styles } from './styles';
 import {
-    LayoutDashboard, Lightbulb, Power, Thermometer, Shield, Smartphone,
-    Settings, Search, CheckCircle2, XCircle, Mic, Activity, Check,
-    RefreshCw, Calendar, Camera, MessageSquare, Blinds, MapPin, Zap,
-    Image as ImageIcon, ToggleLeft, Clock, Hash, List, Key, Music,
-    Users, Gamepad2, PlaySquare, FileText, MousePointer2, Droplets,
-    Wind, Cloud, Map, Save
+    Settings, Search, CheckCircle2, XCircle, Mic, RefreshCw, Save
 } from 'lucide-react';
 
 interface GaiaEntity {
@@ -17,22 +12,6 @@ interface GaiaEntity {
     yaml_has_override: boolean;
     override_value: boolean | null;
 }
-
-const DOMAIN_ICONS: Record<string, React.ReactNode> = {
-    light: <Lightbulb size={18} />, switch: <Power size={18} />, climate: <Thermometer size={18} />,
-    alarm_control_panel: <Shield size={18} />, binary_sensor: <ToggleLeft size={18} />,
-    button: <MousePointer2 size={18} />, calendar: <Calendar size={18} />, camera: <Camera size={18} />,
-    conversation: <MessageSquare size={18} />, cover: <Blinds size={18} />, device_tracker: <MapPin size={18} />,
-    event: <Zap size={18} />, fan: <Wind size={18} />, image: <ImageIcon size={18} />,
-    input_boolean: <ToggleLeft size={18} />, input_datetime: <Clock size={18} />,
-    input_number: <Hash size={18} />, input_select: <List size={18} />, lock: <Key size={18} />,
-    media_player: <Music size={18} />, number: <Hash size={18} />, person: <Users size={18} />,
-    remote: <Gamepad2 size={18} />, scene: <PlaySquare size={18} />, script: <FileText size={18} />,
-    select: <List size={18} />, sensor: <Activity size={18} />, stt: <Mic size={18} />, tts: <Mic size={18} />,
-    time: <Clock size={18} />, todo: <Check size={18} />, update: <RefreshCw size={18} />,
-    vacuum: <Settings size={18} />, water_heater: <Droplets size={18} />, weather: <Cloud size={18} />,
-    zone: <Map size={18} />, ai_task: <Activity size={18} />, default: <Smartphone size={18} />
-};
 
 const EntityRow = React.memo(({
     entity,
@@ -227,6 +206,21 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                     <h1>GAIA Exposure Manager</h1>
                 </div>
                 <div className="gaia-header-actions">
+                    <select
+                        className="gaia-domain-select"
+                        value={activeTab}
+                        onChange={(e) => setActiveTab(e.target.value)}
+                    >
+                        <option value="all">All Entities ({stats.total})</option>
+                        {Object.entries(domainCounts).map(([domain, count]) => {
+                            const displayName = domain.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                            return (
+                                <option key={domain} value={domain}>
+                                    {displayName} ({count})
+                                </option>
+                            );
+                        })}
+                    </select>
                     <div className="gaia-search">
                         <Search size={18} className="gaia-search-icon" />
                         <input
@@ -241,48 +235,6 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                     </button>
                 </div>
             </header>
-
-            {/* Horizontal Tabs */}
-            <div className="gaia-tabs-container">
-                <button
-                    className={`gaia-tab ${activeTab === 'all' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('all')}
-                >
-                    <LayoutDashboard size={16} /> All Entities ({stats.total})
-                </button>
-                {Object.entries(domainCounts).map(([domain, count]) => {
-                    const domainEntities = entities.filter(e => e.domain === domain);
-                    const isDomainExposed = effectiveDomainModes[domain] === 'expose';
-                    const hasExposedOverrides = domainEntities.some(e => {
-                        const localOverride = pendingOverrides[e.id];
-                        if (localOverride !== undefined) return localOverride === 'exposed';
-                        return e.yaml_has_override && e.override_value === true;
-                    });
-                    const hasHiddenOverrides = domainEntities.some(e => {
-                        const localOverride = pendingOverrides[e.id];
-                        if (localOverride !== undefined) return localOverride === 'hidden';
-                        return e.yaml_has_override && e.override_value === false;
-                    });
-
-                    let colorClass = "";
-                    if (!isDomainExposed) {
-                        colorClass = hasExposedOverrides ? "tab-orange" : "tab-red";
-                    } else {
-                        colorClass = hasHiddenOverrides ? "tab-lightgreen" : "tab-darkgreen";
-                    }
-
-                    return (
-                        <button
-                            key={domain}
-                            className={`gaia-tab ${activeTab === domain ? 'active' : ''} ${colorClass}`}
-                            onClick={() => setActiveTab(domain)}
-                        >
-                            {DOMAIN_ICONS[domain] || DOMAIN_ICONS.default}
-                            <span style={{ textTransform: 'capitalize' }}>{domain.replace(/_/g, ' ')} ({count})</span>
-                        </button>
-                    );
-                })}
-            </div>
 
             {/* Main Content Area */}
             <main className="gaia-main-area">
@@ -308,27 +260,20 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                         {activeTab !== 'all' && (
                             <div className="gaia-card-header">
                                 <div className="gaia-global-switch">
-                                    <span className="gaia-global-label">Global Default View:</span>
-                                    <div className="gaia-segment-control">
+                                    <span className="gaia-global-label">Expose Domain:</span>
+                                    <div className="gaia-switch-wrapper">
+                                        <span className={`gaia-switch-label ${currentMode === 'hide' ? 'active-hidden' : ''}`}>Hidden</span>
                                         <button
                                             type="button"
-                                            className={`gaia-segment-btn ${currentMode === 'hide' ? 'active-hide' : ''}`}
-                                            onClick={() => setMode('hide')}
+                                            className={`gaia-slim-switch ${currentMode === 'expose' ? 'overridden override-exposed' : ''}`}
+                                            onClick={() => setMode(currentMode === 'hide' ? 'expose' : 'hide')}
                                         >
-                                            Hide All by Default
+                                            <div className="slider-thumb"></div>
                                         </button>
-                                        <button
-                                            type="button"
-                                            className={`gaia-segment-btn ${currentMode === 'expose' ? 'active-expose' : ''}`}
-                                            onClick={() => setMode('expose')}
-                                        >
-                                            Expose All by Default
-                                        </button>
+                                        <span className={`gaia-switch-label ${currentMode === 'expose' ? 'active-exposed' : ''}`}>Exposed</span>
                                     </div>
                                     <p className="gaia-global-desc">
-                                        {currentMode === 'hide'
-                                            ? "Entities are Hidden by default. Use switches to Expose them (Green)."
-                                            : "Entities are Exposed by default. Use switches to explicitly Hide them (Red)."}
+                                        Determines if new entities in this domain are automatically exposed to Google Assistant.
                                     </p>
                                 </div>
                             </div>

@@ -115,75 +115,33 @@ export const styles = `
     background: var(--gaia-bg);
 }
 
-/* Horizontal Tabs Menu */
-.gaia-tabs-container {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 8px;
-    padding: 12px 32px 12px 32px;
-    background-color: var(--gaia-card-bg);
-    border-bottom: 1px solid var(--gaia-border);
-    overflow-x: auto;
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
-}
-
-.gaia-tabs-container::-webkit-scrollbar {
-    display: none; /* Chrome, Safari and Opera */
-}
-
-.gaia-tab {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 14px;
-    border: 1px solid transparent;
-    border-radius: 20px;
-    background: transparent;
-    color: var(--gaia-text-sec);
-    font-weight: 500;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: var(--gaia-font);
-    white-space: nowrap;
-}
-
-.gaia-tab:hover {
+.gaia-domain-select {
+    padding: 8px 36px 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--gaia-border);
+    background-color: var(--gaia-bg);
     color: var(--gaia-text);
-    background: var(--gaia-bg);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    font-family: var(--gaia-font);
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    transition: all 0.2s;
 }
 
-.gaia-tab.active {
-    color: var(--gaia-primary);
-    background: rgba(3, 169, 244, 0.1); /* Fallback tint, overridden if ha-primary-color exists */
-    border-color: rgba(3, 169, 244, 0.2);
-    font-weight: 600;
+.gaia-domain-select:hover {
+    border-color: var(--gaia-primary);
 }
 
-.gaia-tab-badge {
-    background: var(--gaia-border);
-    color: var(--gaia-text-sec);
-    font-size: 0.75rem;
-    padding: 2px 8px;
-    border-radius: 12px;
+.gaia-domain-select:focus {
+    border-color: var(--gaia-primary);
+    box-shadow: 0 0 0 2px rgba(3, 169, 244, 0.2);
 }
-
-.gaia-tab.active .gaia-tab-badge {
-    background: rgba(3, 169, 244, 0.1);
-    color: var(--gaia-primary);
-}
-
-/* Epic 4: Domain Tab Alert Colors */
-.gaia-tab.tab-red { border-color: rgba(239, 83, 80, 0.3); color: #ef5350; }
-.gaia-tab.tab-orange { border-color: rgba(255, 152, 0, 0.3); color: #ff9800; }
-.gaia-tab.tab-lightgreen { border-color: rgba(129, 199, 132, 0.3); color: #81c784; }
-.gaia-tab.tab-darkgreen { border-color: rgba(76, 175, 80, 0.3); color: #4CAF50; }
-
-.gaia-tab.tab-red.active { background: #ef5350; color: white; border-color: #ef5350; }
-.gaia-tab.tab-orange.active { background: #ff9800; color: white; border-color: #ff9800; }
-.gaia-tab.tab-lightgreen.active { background: #81c784; color: white; border-color: #81c784; }
-.gaia-tab.tab-darkgreen.active { background: #4CAF50; color: white; border-color: #4CAF50; }
 
 .gaia-main-area {
     flex: 1;
@@ -215,38 +173,6 @@ export const styles = `
 .gaia-global-label {
     font-weight: 600;
     color: var(--gaia-text);
-}
-
-.gaia-segment-control {
-    display: flex;
-    background: var(--gaia-bg);
-    border-radius: 8px;
-    padding: 4px;
-    border: 1px solid var(--gaia-border);
-}
-
-.gaia-segment-btn {
-    padding: 6px 16px;
-    border-radius: 6px;
-    border: none;
-    background: transparent;
-    color: var(--gaia-text-sec);
-    cursor: pointer;
-    font-weight: 600;
-    font-family: var(--gaia-font);
-    transition: all 0.2s;
-}
-
-.gaia-segment-btn.active-hide {
-    background: var(--gaia-card-bg);
-    color: var(--gaia-text);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.gaia-segment-btn.active-expose {
-    background: var(--gaia-card-bg);
-    color: var(--gaia-text);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .gaia-global-desc {
