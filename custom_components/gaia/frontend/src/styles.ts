@@ -203,13 +203,23 @@ export const styles = `
     justify-content: space-between;
     padding: 16px 20px;
     cursor: pointer;
-    background: var(--gaia-card-bg);
-    transition: background-color 0.2s;
+    background: var(--gaia-bg);
+    border-left: 4px solid transparent;
+    transition: background-color 0.2s, border-color 0.2s;
     user-select: none;
 }
 
 .gaia-accordion-header:hover {
-    background: var(--gaia-bg);
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.gaia-accordion-header.gaia-accordion-unsaved {
+    border-left-color: var(--gaia-primary);
+    background: rgba(3, 169, 244, 0.05); /* Match tint fallback if no primary */
+}
+
+.gaia-accordion-unsaved .gaia-accordion-title {
+    font-weight: 800;
 }
 
 .gaia-accordion-title {
@@ -281,6 +291,12 @@ export const styles = `
     color: var(--gaia-text);
     line-height: 1.3;
     word-break: break-word;
+    transition: color 0.2s;
+}
+
+.gaia-entity-unsaved .gaia-entity-name {
+    font-weight: 800;
+    color: var(--gaia-primary);
 }
 
 .gaia-entity-card-controls {
@@ -470,7 +486,7 @@ export const styles = `
     height: 24px;
     border-radius: 12px;
     border: none;
-    background-color: var(--gaia-border);
+    background-color: var(--gaia-border); /* Default grey */
     cursor: pointer;
     padding: 0;
     transition: background-color 0.3s;
@@ -489,24 +505,31 @@ export const styles = `
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+/* Entity Overrides */
 .gaia-slim-switch.overridden.override-exposed {
-    background-color: var(--gaia-primary);
+    background-color: var(--gaia-success);
 }
 
 .gaia-slim-switch.overridden.override-hidden {
-    background-color: var(--gaia-text-sec);
+    background-color: var(--gaia-danger);
 }
 
 .gaia-slim-switch.overridden .slider-thumb {
     transform: translateX(20px);
 }
 
+/* Domain Global Switch Colors */
+.gaia-domain-switch {
+    background-color: var(--gaia-danger); /* Base Domain is Red when hidden */
+}
+
+.gaia-domain-switch.overridden.override-exposed {
+    background-color: var(--gaia-success); /* Base Domain is Green when exposed */
+}
+
 @media (prefers-color-scheme: dark) {
     .gaia-slim-switch .slider-thumb {
         background-color: #d1d5db;
-    }
-    .gaia-slim-switch.overridden.override-hidden {
-        background-color: #4b5563;
     }
 }
 

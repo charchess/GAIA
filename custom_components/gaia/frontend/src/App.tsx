@@ -70,7 +70,7 @@ const EntityCard = React.memo(({
     };
 
     return (
-        <div className="gaia-entity-card">
+        <div className={`gaia-entity-card ${pendingOverride ? 'gaia-entity-unsaved' : ''}`}>
             <div className="gaia-entity-card-header">
                 <div>
                     <div className="gaia-entity-name">{entity.name}</div>
@@ -153,8 +153,24 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
         if (hass && entities.length === 0) fetchEntities();
     }, [hass]);
 
-    const toggleExposure = async (id: string, targetState: 'exposed' | 'hidden' | 'default') => {
-        setPendingOverrides(prev => ({ ...prev, [id]: targetState }));
+    const toggleExposure = async (entityId: string, targetState: 'exposed' | 'hidden' | 'default') => {
+        const entity = entities.find(e => e.id === entityId);
+        if (!entity) return;
+
+        setPendingOverrides(prev => {
+            const next = { ...prev };
+            // If the user reverts an unsaved change back to the YAML original state, remove it from pending.
+            if (targetState === 'default' && !entity.yaml_has_override) {
+                delete next[entityId];
+            } else if (targetState === 'exposed' && entity.yaml_has_override && entity.override_value === true) {
+                delete next[entityId];
+            } else if (targetState === 'hidden' && entity.yaml_has_override && entity.override_value === false) {
+                delete next[entityId];
+            } else {
+                next[entityId] = targetState;
+            }
+            return next;
+        });
     };
 
     const saveBatchConfiguration = async () => {
@@ -206,15 +222,34 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
         }
     });
 
-    const setDomainMode = async (domain: string, mode: 'expose' | 'hide') => {
-        setPendingOverrides(prev => ({ ...prev, [domain]: mode === 'expose' ? 'exposed' : 'hidden' }));
+    const setDomainMode = async (domain: string, targetMode: 'expose' | 'hide') => {
+        const currentYamlMode = domainModes[domain] || 'hide';
+        setPendingOverrides(prev => {
+            const next = { ...prev };
+            if (targetMode === currentYamlMode) {
+                delete next[domain];
+            } else {
+                next[domain] = targetMode === 'expose' ? 'exposed' : 'hidden';
+            }
+            return next;
+        });
     };
 
     const toggleAccordion = (domain: string) => {
         setExpandedDomains(prev => ({
             ...prev,
-            [domain]: !prev[domain]
+            [domain]: prev[domain] === true ? false : true
         }));
+    };
+
+    const expandAll = () => {
+        const all: Record<string, boolean> = {};
+        Object.keys(domainCounts).forEach(d => all[d] = true);
+        setExpandedDomains(all);
+    };
+
+    const collapseAll = () => {
+        setExpandedDomains({});
     };
 
     return (
@@ -262,63 +297,72 @@ export default function App({ hass, panel: _panel }: { hass?: any; panel?: any }
                         <p>Try adjusting your search criteria or select another tab.</p>
                     </div>
                 ) : (
-                    <div className="gaia-accordions-wrapper">
-                        {Object.keys(domainCounts).map((domain) => {
-                            const domainEntities = filteredEntities.filter(e => e.domain === domain);
-                            if (domainEntities.length === 0) return null; // Hide domain if all entities filtered out out by search
+                    <>
+                        {Object.keys(domainCounts).length > 0 && (
+                            <div className="gaia-accordion-controls" style={{ padding: '0 32px 12px 32px', display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
+                                <button onClick={expandAll} style={{ background: 'none', border: 'none', color: 'var(--gaia-primary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Expand All</button>
+                                <button onClick={collapseAll} style={{ background: 'none', border: 'none', color: 'var(--gaia-primary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Collapse All</button>
+                            </div>
+                        )}
+                        <div className="gaia-accordions-wrapper" style={{ paddingTop: 0 }}>
+                            {Object.keys(domainCounts).map((domain) => {
+                                const domainEntities = filteredEntities.filter(e => e.domain === domain);
+                                if (domainEntities.length === 0) return null; // Hide domain if all entities filtered out out by search
 
-                            const isExpanded = expandedDomains[domain] !== false; // Default to true if undefined
-                            const currentMode = effectiveDomainModes[domain] || 'hide';
+                                const isExpanded = expandedDomains[domain] === true; // Epic 9: Default to closed
+                                const currentMode = effectiveDomainModes[domain] || 'hide';
+                                const hasPendingDomainOverride = pendingOverrides[domain] !== undefined;
 
-                            return (
-                                <div key={domain} className="gaia-accordion">
-                                    <div className="gaia-accordion-header" onClick={() => toggleAccordion(domain)}>
-                                        <div className="gaia-accordion-title">
-                                            <span>
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                                                    style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', color: 'var(--gaia-text-sec)' }}>
-                                                    <polyline points="9 18 15 12 9 6"></polyline>
-                                                </svg>
-                                            </span>
-                                            {DOMAIN_ICONS[domain] || DOMAIN_ICONS.default}
-                                            {domain.replace(/_/g, ' ')}
-                                            <span className="gaia-accordion-count">{domainEntities.length}</span>
-                                        </div>
-                                        <div className="gaia-accordion-actions" onClick={e => e.stopPropagation()}>
-                                            <div className="gaia-switch-wrapper">
-                                                <span className={`gaia-switch-label ${currentMode === 'hide' ? 'active-hidden' : ''}`}>Hidden</span>
-                                                <button
-                                                    type="button"
-                                                    className={`gaia-slim-switch ${currentMode === 'expose' ? 'overridden override-exposed' : ''}`}
-                                                    onClick={() => setDomainMode(domain, currentMode === 'hide' ? 'expose' : 'hide')}
-                                                    title={`Toggle default exposure for all ${domain} entities`}
-                                                >
-                                                    <div className="slider-thumb"></div>
-                                                </button>
-                                                <span className={`gaia-switch-label ${currentMode === 'expose' ? 'active-exposed' : ''}`}>Exposed</span>
+                                return (
+                                    <div key={domain} className="gaia-accordion">
+                                        <div className={`gaia-accordion-header ${hasPendingDomainOverride ? 'gaia-accordion-unsaved' : ''}`} onClick={() => toggleAccordion(domain)}>
+                                            <div className="gaia-accordion-title">
+                                                <span>
+                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                                                        style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', color: 'var(--gaia-text-sec)' }}>
+                                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                                    </svg>
+                                                </span>
+                                                {DOMAIN_ICONS[domain] || DOMAIN_ICONS.default}
+                                                {domain.replace(/_/g, ' ')}
+                                                <span className="gaia-accordion-count">{domainEntities.length}</span>
+                                            </div>
+                                            <div className="gaia-accordion-actions" onClick={e => e.stopPropagation()}>
+                                                <div className="gaia-switch-wrapper">
+                                                    <span className={`gaia-switch-label ${currentMode === 'hide' ? 'active-hidden' : ''}`}>Hidden</span>
+                                                    <button
+                                                        type="button"
+                                                        className={`gaia-slim-switch gaia-domain-switch ${currentMode === 'expose' ? 'overridden override-exposed' : 'override-hidden'}`}
+                                                        onClick={() => setDomainMode(domain, currentMode === 'hide' ? 'expose' : 'hide')}
+                                                        title={`Toggle default exposure for all ${domain} entities`}
+                                                    >
+                                                        <div className="slider-thumb"></div>
+                                                    </button>
+                                                    <span className={`gaia-switch-label ${currentMode === 'expose' ? 'active-exposed' : ''}`}>Exposed</span>
+                                                </div>
                                             </div>
                                         </div>
+
+                                        {isExpanded && (
+                                            <div className="gaia-accordion-content">
+                                                <div className="gaia-grid-container">
+                                                    {domainEntities.map(entity => (
+                                                        <EntityCard
+                                                            key={entity.id}
+                                                            entity={entity}
+                                                            isDomainExposed={effectiveDomainModes[entity.domain] === 'expose'}
+                                                            pendingOverride={pendingOverrides[entity.id]}
+                                                            onToggle={toggleExposure}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-
-                                    {isExpanded && (
-                                        <div className="gaia-accordion-content">
-                                            <div className="gaia-grid-container">
-                                                {domainEntities.map(entity => (
-                                                    <EntityCard
-                                                        key={entity.id}
-                                                        entity={entity}
-                                                        isDomainExposed={effectiveDomainModes[entity.domain] === 'expose'}
-                                                        pendingOverride={pendingOverrides[entity.id]}
-                                                        onToggle={toggleExposure}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
+                                );
+                            })}
+                        </div>
+                    </>
                 )}
             </main>
 
