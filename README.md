@@ -148,6 +148,7 @@ Ideas under consideration (no timeline, no guarantees):
 - **Area/room display** — Show entity areas in debug mode (HA already exposes this data via its registry)
 - **Area sync to Google** — Push HA area information to Google Assistant to improve room assignment in the Google Home app
 - **Installation integration** — Streamlined setup flow within Home Assistant's UI
+- **Post-save YAML check + restart** — After saving, validate the YAML syntax and offer a one-click HA restart to apply changes immediately
 
 ## License
 
